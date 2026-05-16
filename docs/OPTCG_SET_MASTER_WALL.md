@@ -32,11 +32,55 @@ When the collector toggles `Owned`, the row moves between views instantly. No fo
 
 ### Notion view settings for the grid aesthetic
 
-- **Card size**: Small or Medium (NOT Large — keeps the grid dense)
-- **Fit image**: **Page cover** (so card art fills its tile edge-to-edge)
+- **Card size**: Small (NOT Large — keeps the grid dense, ~6 cards per row on desktop)
+- **Fit image**: **Page cover** (card art fills its tile edge-to-edge)
 - **Show / hide properties**: hide everything except the cover. The grid is image-only.
 - **Sort**: `Card ID` asc so the grid follows the set's natural numbering
 - **Group**: none (don't break the grid into sections)
+
+## Compact thumbnails — match image size to card size
+
+The grid feels cleanest when all tiles share the same aspect ratio + dimensions. Optcgapi serves card art at varying high-resolution sizes, which (a) bloats Notion page load, (b) lets the image's intrinsic dimensions creep into the layout. Solution: ask `wsrv.nl` to **resize and crop** each image to a fixed target width.
+
+Pass `thumbnailWidth` to `buildOptcgSetMasterWallEntries`:
+
+```ts
+import {
+  buildOptcgSetMasterWallEntries,
+  COMPACT_GRID_WIDTH,    // 280 — matches Notion gallery card Small
+  STANDARD_GRID_WIDTH,   // 360 — matches Medium
+  SHOWCASE_GRID_WIDTH,   // 480 — matches Large
+} from "./lib/optcg-set-master-wall.js";
+
+const entries = buildOptcgSetMasterWallEntries(setId, cards, owned, {
+  thumbnailWidth: COMPACT_GRID_WIDTH,
+});
+```
+
+What this does to the URLs:
+
+| Before | After (with `thumbnailWidth: 280`) |
+|---|---|
+| `https://optcgapi.com/.../OP01-003.jpg` (1500×2100, ~400 KB) | `https://wsrv.nl/?url=...&output=jpg&w=280&fit=cover&q=85` (280×392, ~25 KB) |
+
+The B&W variant gets the same treatment — same width, same crop, same compression, but with `&filt=greyscale` added.
+
+### Why this matters for the aesthetic
+
+- **Uniform dimensions** — every tile is exactly `thumbnailWidth × thumbnailWidth × 1.4`. No "this tile is slightly wider because the source was bigger."
+- **Fast page loads** — a 200-card set served at compact width is ~5 MB total instead of ~80 MB. Notion's gallery view doesn't lazy-load aggressively, so the cold-load delta is noticeable.
+- **Crisp on retina** — `q=85` keeps the image visually crisp while shrinking it ~10x.
+- **`fit=cover`** — wsrv.nl centers + crops to fit the requested width, so portrait card art renders consistently without letterboxing.
+
+### Presets
+
+| Constant | px | Notion card size | Use when |
+|---|---|---|---|
+| `COMPACT_GRID_WIDTH` | 280 | Small | Dense gallery — the default aesthetic, ~6 cards/row desktop |
+| `STANDARD_GRID_WIDTH` | 360 | Medium | Balanced — comfortable browsing |
+| `SHOWCASE_GRID_WIDTH` | 480 | Large | Trophy / showcase pages where each card deserves attention |
+
+`thumbnailWidth` is optional — leaving it unset returns the original optcgapi URL (the pre-styling behavior, preserved exactly).
 
 ## Click-to-mark-owned
 

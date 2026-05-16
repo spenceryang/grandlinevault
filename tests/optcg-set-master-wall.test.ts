@@ -2,8 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
 	buildOptcgSetMasterWallEntries,
+	COMPACT_GRID_WIDTH,
 	type OptcgSetMasterWallSourceCard,
+	SHOWCASE_GRID_WIDTH,
+	STANDARD_GRID_WIDTH,
 	summarizeOptcgSetMasterWall,
+	toCompactColorImageUrl,
 	toGreyscaleImageUrl,
 } from "../src/lib/optcg-set-master-wall.js";
 
@@ -149,4 +153,83 @@ test("buildOptcgSetMasterWallEntries falls back to provided setId when card lack
 	);
 	assert.equal(entries[0].setId, "OP-01");
 	assert.equal(entries[0].setName, "OP-01");
+});
+
+test("toCompactColorImageUrl returns original URL when no width supplied", () => {
+	const original = "https://optcgapi.com/media/static/Card_Images/OP01-003.jpg";
+	assert.equal(toCompactColorImageUrl(original), original);
+	assert.equal(toCompactColorImageUrl(original, 0), original);
+});
+
+test("toCompactColorImageUrl wraps in wsrv.nl with width when supplied", () => {
+	const url = toCompactColorImageUrl(
+		"https://optcgapi.com/media/static/Card_Images/OP01-003.jpg",
+		280,
+	);
+	assert.ok(url.startsWith("https://wsrv.nl/?url="));
+	assert.match(url, /w=280/);
+	assert.match(url, /fit=cover/);
+	assert.match(url, /q=85/);
+	assert.ok(!url.includes("filt=greyscale"));
+});
+
+test("toGreyscaleImageUrl includes width when thumbnailWidth supplied", () => {
+	const url = toGreyscaleImageUrl(
+		"https://optcgapi.com/media/static/Card_Images/OP01-003.jpg",
+		360,
+	);
+	assert.match(url, /filt=greyscale/);
+	assert.match(url, /w=360/);
+	assert.match(url, /fit=cover/);
+});
+
+test("toGreyscaleImageUrl omits width param when not supplied", () => {
+	const url = toGreyscaleImageUrl(
+		"https://optcgapi.com/media/static/Card_Images/OP01-003.jpg",
+	);
+	assert.ok(!url.includes("w="));
+});
+
+test("buildOptcgSetMasterWallEntries produces compact URLs when thumbnailWidth set", () => {
+	const entries = buildOptcgSetMasterWallEntries(
+		"OP-01",
+		[card()],
+		new Set(),
+		{ thumbnailWidth: COMPACT_GRID_WIDTH },
+	);
+	assert.match(entries[0].colorImageUrl, /wsrv\.nl/);
+	assert.match(entries[0].colorImageUrl, /w=280/);
+	assert.match(entries[0].greyscaleImageUrl, /w=280/);
+});
+
+test("buildOptcgSetMasterWallEntries respects different size presets", () => {
+	const compact = buildOptcgSetMasterWallEntries("OP-01", [card()], new Set(), {
+		thumbnailWidth: COMPACT_GRID_WIDTH,
+	});
+	const standard = buildOptcgSetMasterWallEntries("OP-01", [card()], new Set(), {
+		thumbnailWidth: STANDARD_GRID_WIDTH,
+	});
+	const showcase = buildOptcgSetMasterWallEntries("OP-01", [card()], new Set(), {
+		thumbnailWidth: SHOWCASE_GRID_WIDTH,
+	});
+	assert.match(compact[0].colorImageUrl, /w=280/);
+	assert.match(standard[0].colorImageUrl, /w=360/);
+	assert.match(showcase[0].colorImageUrl, /w=480/);
+});
+
+test("buildOptcgSetMasterWallEntries default behavior matches pre-styling output", () => {
+	const original = "https://optcgapi.com/media/static/Card_Images/OP01-003.jpg";
+	const entries = buildOptcgSetMasterWallEntries(
+		"OP-01",
+		[card({ imageUrl: original })],
+		new Set(),
+	);
+	assert.equal(entries[0].colorImageUrl, original);
+	assert.ok(!entries[0].greyscaleImageUrl.includes("w="));
+});
+
+test("size preset constants are the documented values", () => {
+	assert.equal(COMPACT_GRID_WIDTH, 280);
+	assert.equal(STANDARD_GRID_WIDTH, 360);
+	assert.equal(SHOWCASE_GRID_WIDTH, 480);
 });
