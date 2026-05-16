@@ -12,6 +12,17 @@ Grand Line Vault uses two kinds of databases:
 
 The Worker-managed databases are created by deployment. The user-created databases should live in the actual workspace that collectors use day to day.
 
+## Project scope in Notion
+
+For the hackathon workspace, keep the visible user journey One Piece-first:
+
+```text
+Scan Inbox → Owned Cards → Collection Gallery → Set Completion → Recommendations / Decks / Luffy Index
+```
+
+PriceCharting, PSA verification, and Pokémon/TCGdex are extension tracks. They can be mentioned in an Admin or Roadmap section, but they should not distract from the main One Piece collection loop unless their Worker tools and Notion databases are explicitly wired.
+
+
 ## Scan Inbox database
 
 Create these properties exactly:
@@ -31,7 +42,7 @@ Create these properties exactly:
 Current fallback flow:
 
 ```text
-Upload Front image → keep Status = New → ask the Agent to run processScanInboxQueue
+Upload Front image → keep Status = New → ask the Agent to run processLatestScan or processScanInboxQueue
 ```
 
 When Worker automation capabilities are enabled for the workspace, set `ENABLE_NOTION_AUTOMATIONS=1`, redeploy, and create this Notion database automation:
@@ -100,6 +111,6 @@ Grand Line Vault
 
 1. Create a Scan Inbox row.
 2. Upload a card-front image to `Front image`.
-3. Ask the Agent to run `processScanInboxQueue`.
+3. Ask the Agent to run `processLatestScan` for one row, or `processScanInboxQueue` for a batch.
 4. Open the Owned Cards Gallery view.
 5. Show portfolio charts from `Price Snapshots`.

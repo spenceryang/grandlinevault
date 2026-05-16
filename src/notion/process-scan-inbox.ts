@@ -1,6 +1,6 @@
 import type { Client } from "@notionhq/client";
 import { config, requireEnv } from "../config.js";
-import { getOptcgCard } from "../providers/optcgapi/get-card.js";
+import { resolveOptcgCardDetails } from "../providers/optcgapi/resolve-card.js";
 import { recognizeCardFromImageUrl } from "../providers/recognition.js";
 import { createOwnedCardPage } from "./write-owned-card.js";
 
@@ -30,6 +30,16 @@ export type ProcessScanInboxResult = {
 	ownedCardUrl?: string;
 };
 
+export type LatestScanSummary = {
+	found: boolean;
+	pageId?: string;
+	pageUrl?: string;
+	status?: string;
+	result?: string;
+	confidence?: number | null;
+	ownedCardUrl?: string | null;
+};
+
 export async function processScanInboxQueue(
 	notion: Client,
 	limit = 10,
@@ -45,6 +55,7 @@ export async function processScanInboxQueue(
 			property: "Status",
 			select: { equals: "New" },
 		},
+		sorts: [{ timestamp: "last_edited_time", direction: "descending" }],
 	});
 
 	const pages = response.results.filter(
@@ -56,6 +67,52 @@ export async function processScanInboxQueue(
 	}
 
 	return { processed };
+}
+
+export async function processLatestScan(
+	notion: Client,
+): Promise<ProcessScanInboxResult> {
+	const result = await processScanInboxQueue(notion, 1);
+	const [processed] = result.processed;
+	if (!processed) {
+		return {
+			status: "Needs Review",
+			message: "No Scan Inbox rows with Status = New were found.",
+		};
+	}
+	return processed;
+}
+
+export async function whatDidIJustScan(
+	notion: Client,
+): Promise<LatestScanSummary> {
+	const dataSourceId = requireEnv(
+		config.scanInboxDataSourceId,
+		"SCAN_INBOX_DATA_SOURCE_ID",
+	);
+	const response = await notion.dataSources.query({
+		data_source_id: dataSourceId,
+		page_size: 1,
+		filter: {
+			property: "Status",
+			select: { equals: "Matched" },
+		},
+		sorts: [{ timestamp: "last_edited_time", direction: "descending" }],
+	});
+	const page = response.results.find((result) => "properties" in result) as
+		| PageData
+		| undefined;
+	if (!page) return { found: false };
+
+	return {
+		found: true,
+		pageId: page.id,
+		pageUrl: page.url,
+		status: extractSelectName(page.properties.Status) ?? undefined,
+		result: extractRichText(page.properties["Recognition result"]) ?? undefined,
+		confidence: extractNumber(page.properties.Confidence),
+		ownedCardUrl: extractUrl(page.properties["Linked owned card"]),
+	};
 }
 
 export async function processScanInboxPage(
@@ -105,7 +162,7 @@ export async function processScanInboxPage(
 			return result;
 		}
 
-		const variants = await getOptcgCard(recognition.candidate.cardId);
+		const variants = await resolveOptcgCardDetails(recognition.candidate.cardId);
 		const variant =
 			variants.find((candidate) => candidate.cardImageId === candidate.cardSetId) ??
 			variants[0];
@@ -172,6 +229,22 @@ export function extractRichText(property: unknown): string | null {
 	const richText = (property as { rich_text?: RichTextEntry[] } | undefined)
 		?.rich_text;
 	return joinText(richText);
+}
+
+function extractSelectName(property: unknown): string | null {
+	return (
+		(property as { select?: { name?: string | null } } | undefined)?.select
+			?.name ?? null
+	);
+}
+
+function extractNumber(property: unknown): number | null {
+	const value = (property as { number?: number | null } | undefined)?.number;
+	return typeof value === "number" ? value : null;
+}
+
+function extractUrl(property: unknown): string | null {
+	return (property as { url?: string | null } | undefined)?.url ?? null;
 }
 
 function extractTitle(property: unknown): string | null {
