@@ -358,19 +358,46 @@ worker.sync("syncOptcgSetAnalytics", {
 	database: setAnalytics,
 	mode: "replace",
 	schedule: "1d",
-	execute: async () => {
+	execute: async (_state, context) => {
 		await externalApiPacer.wait();
 		const cards = await listAllOptcgSetCards();
 		const grouped = groupCardsBySet(cards);
 
+		let ownedIds = new Set<string>();
+		try {
+			const owned = await fetchOwnedCards(context.notion);
+			ownedIds = new Set(owned.map((c) => c.cardId.trim().toUpperCase()));
+		} catch (error) {
+			console.warn(
+				"syncOptcgSetAnalytics: owned-cards data source unavailable; writing 0% completion.",
+				error,
+			);
+		}
+
 		return {
 			changes: Array.from(grouped.entries()).map(([setId, setCards]) => {
 				const total = setCards.length;
-				const baseCount = setCards.filter(
-					(c) => c.cardImageId === c.cardSetId,
-				).length;
-				const parallelCount = total - baseCount;
+				const base = setCards.filter((c) => c.cardImageId === c.cardSetId);
+				const parallels = setCards.filter(
+					(c) => c.cardImageId !== c.cardSetId,
+				);
+				const isOwned = (variantId: string, baseId: string) =>
+					ownedIds.has(variantId.toUpperCase()) ||
+					ownedIds.has(baseId.toUpperCase());
+				const ownedCards = setCards.filter((c) =>
+					isOwned(c.cardImageId, c.cardSetId),
+				);
+				const ownedBase = base.filter((c) =>
+					isOwned(c.cardImageId, c.cardSetId),
+				);
+				const ownedParallels = parallels.filter((c) =>
+					isOwned(c.cardImageId, c.cardSetId),
+				);
 				const totalValue = setCards.reduce(
+					(sum, c) => sum + (c.marketPrice ?? 0),
+					0,
+				);
+				const ownedValue = ownedCards.reduce(
 					(sum, c) => sum + (c.marketPrice ?? 0),
 					0,
 				);
@@ -381,16 +408,20 @@ worker.sync("syncOptcgSetAnalytics", {
 						"Set Name": Builder.title(setCards[0].setName ?? setId),
 						"Set ID": Builder.richText(setId),
 						"Total Cards": Builder.number(total),
-						Owned: Builder.number(0),
-						"Completion %": Builder.number(0),
-						"Base Owned": Builder.number(0),
-						"Base Total": Builder.number(baseCount),
-						"Parallel Owned": Builder.number(0),
-						"Parallel Total": Builder.number(parallelCount),
+						Owned: Builder.number(ownedCards.length),
+						"Completion %": Builder.number(
+							total === 0 ? 0 : ownedCards.length / total,
+						),
+						"Base Owned": Builder.number(ownedBase.length),
+						"Base Total": Builder.number(base.length),
+						"Parallel Owned": Builder.number(ownedParallels.length),
+						"Parallel Total": Builder.number(parallels.length),
 						"Total Value": Builder.number(
 							Math.round(totalValue * 100) / 100,
 						),
-						"Owned Value": Builder.number(0),
+						"Owned Value": Builder.number(
+							Math.round(ownedValue * 100) / 100,
+						),
 					},
 				};
 			}),
