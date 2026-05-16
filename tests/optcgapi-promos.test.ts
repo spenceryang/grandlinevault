@@ -111,6 +111,24 @@ test("filterOptcgPromoCards rejects empty filter set", async () => {
 	);
 });
 
+test("filterOptcgPromoCards passes cardName through", async () => {
+	const originalFetch = globalThis.fetch;
+	let capturedUrl = "";
+	globalThis.fetch = (async (input: string | URL | Request) => {
+		capturedUrl = String(input);
+		return new Response(JSON.stringify([samplePromo]), {
+			status: 200,
+			headers: { "content-type": "application/json" },
+		});
+	}) as typeof fetch;
+	try {
+		await filterOptcgPromoCards({ cardName: "Luffy" });
+		assert.match(capturedUrl, /card_name=Luffy/);
+	} finally {
+		globalThis.fetch = originalFetch;
+	}
+});
+
 test("filterOptcgPromoCards throws on non-2xx response", async () => {
 	const originalFetch = globalThis.fetch;
 	globalThis.fetch = (async () =>

@@ -58,6 +58,7 @@ export type StarterCardFilters = {
 	cardType?: string;
 	cost?: string;
 	rarity?: string;
+	cardName?: string;
 };
 
 async function fetchJson<T>(path: string): Promise<T> {
@@ -113,13 +114,14 @@ export async function filterOptcgStarterCards(
 	filters: StarterCardFilters,
 ): Promise<OptcgStarterCard[]> {
 	const params = new URLSearchParams();
+	if (filters.cardName) params.set("card_name", filters.cardName);
 	if (filters.color) params.set("color", filters.color);
 	if (filters.cardType) params.set("card_type", filters.cardType);
 	if (filters.cost) params.set("card_cost", filters.cost);
 	if (filters.rarity) params.set("rarity", filters.rarity);
 	if ([...params.keys()].length === 0) {
 		throw new Error(
-			"At least one filter (color, cardType, cost, or rarity) must be provided.",
+			"At least one filter (cardName, color, cardType, cost, or rarity) must be provided.",
 		);
 	}
 	const data = await fetchJson<OptcgStarterCardRaw[] | { error: string }>(

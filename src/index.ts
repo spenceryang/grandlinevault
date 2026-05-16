@@ -532,17 +532,19 @@ worker.tool("getSetCards", {
 worker.tool("filterCatalogCards", {
 	title: "Filter Catalog Cards",
 	description:
-		"Search OPTCG cards by color, type, cost, and rarity. Use this for queries like showing SR cards or red leaders.",
+		"Search OPTCG cards by name, color, type, cost, and rarity. Use this for queries like 'all SR Red Zoros' or 'red leaders'. cardName is a server-side substring match.",
 	schema: j.object({
+		cardName: j.string().nullable(),
 		color: j.string().nullable(),
 		cardType: j.string().nullable(),
 		cost: j.string().nullable(),
 		rarity: j.string().nullable(),
 	}),
 	hints: { readOnlyHint: true },
-	execute: async ({ color, cardType, cost, rarity }) => {
+	execute: async ({ cardName, color, cardType, cost, rarity }) => {
 		return {
 			cards: await filterOptcgCards({
+				cardName: cardName ?? undefined,
 				color: color ?? undefined,
 				cardType: cardType ?? undefined,
 				cost: cost ?? undefined,
@@ -738,17 +740,19 @@ worker.tool("getStarterCardDetails", {
 worker.tool("filterStarterCards", {
 	title: "Filter Starter Deck Cards",
 	description:
-		"Filter starter-deck cards by color, type, cost, or rarity. Provide at least one filter.",
+		"Filter starter-deck cards by name, color, type, cost, or rarity. Provide at least one filter. cardName is a server-side substring match.",
 	schema: j.object({
+		cardName: j.string().nullable(),
 		color: j.string().nullable(),
 		cardType: j.string().nullable(),
 		cost: j.string().nullable(),
 		rarity: j.string().nullable(),
 	}),
 	hints: { readOnlyHint: true },
-	execute: async ({ color, cardType, cost, rarity }) => {
+	execute: async ({ cardName, color, cardType, cost, rarity }) => {
 		return {
 			cards: await filterOptcgStarterCards({
+				cardName: cardName ?? undefined,
 				color: color ?? undefined,
 				cardType: cardType ?? undefined,
 				cost: cost ?? undefined,
@@ -788,17 +792,19 @@ worker.tool("getPromoCardDetails", {
 worker.tool("filterPromoCards", {
 	title: "Filter Promo Cards",
 	description:
-		"Filter One Piece TCG promo cards by color, type, cost, or rarity. Provide at least one filter.",
+		"Filter One Piece TCG promo cards by name, color, type, cost, or rarity. Provide at least one filter. cardName is a server-side substring match.",
 	schema: j.object({
+		cardName: j.string().nullable(),
 		color: j.string().nullable(),
 		cardType: j.string().nullable(),
 		cost: j.string().nullable(),
 		rarity: j.string().nullable(),
 	}),
 	hints: { readOnlyHint: true },
-	execute: async ({ color, cardType, cost, rarity }) => {
+	execute: async ({ cardName, color, cardType, cost, rarity }) => {
 		return {
 			cards: await filterOptcgPromoCards({
+				cardName: cardName ?? undefined,
 				color: color ?? undefined,
 				cardType: cardType ?? undefined,
 				cost: cost ?? undefined,
