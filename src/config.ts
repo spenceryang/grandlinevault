@@ -10,7 +10,7 @@ export const config = {
 	priceFeedUrl: process.env.PRICE_FEED_URL,
 	optcgSetIds: parseCsv(
 		process.env.OPTCG_SET_IDS ??
-			"OP-01,OP-02,OP-03,OP-04,OP-05,OP-06,OP-07,OP-08,OP-09,OP-10,OP-11,OP-12,OP-13,OP-14,OP-15",
+			"OP-01,OP-02,OP-03,OP-04,OP-05,OP-06,OP-07,EB-01,OP-08,OP-09,OP-10,OP-11,EB-02,OP-12,PRB-01,PRB-02,OP-13,OP14-EB04,EB-03,OP15-EB04",
 	),
 	recognitionConfidenceThreshold: Number(
 		process.env.RECOGNITION_CONFIDENCE_THRESHOLD ?? "0.82",
