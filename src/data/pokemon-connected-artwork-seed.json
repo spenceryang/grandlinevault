@@ -1,0 +1,121 @@
+{
+	"seededAt": "2026-05-16",
+	"note": "Placeholder list of well-known Pokémon TCG connected-artwork sets. Card IDs are TCGdex-style guesses and should be confirmed against https://api.tcgdex.net/v2/en/cards before going live. Add new sets here and the worker sync will mirror them into Notion.",
+	"sets": [
+		{
+			"id": "swsh-evolving-skies-eevee-trio",
+			"title": "Eevee Evolution Trio (placeholder)",
+			"series": "Evolving Skies",
+			"setId": "swsh7",
+			"cards": [
+				{
+					"cardId": "swsh7-PLACEHOLDER-EEVEE",
+					"position": 1,
+					"name": "Eevee (Connected Art)"
+				},
+				{
+					"cardId": "swsh7-PLACEHOLDER-VAPOREON",
+					"position": 2,
+					"name": "Vaporeon (Connected Art)"
+				},
+				{
+					"cardId": "swsh7-PLACEHOLDER-LEAFEON",
+					"position": 3,
+					"name": "Leafeon (Connected Art)"
+				}
+			],
+			"notes": "Placeholder card ids — confirm exact tcgdex ids before deploy"
+		},
+		{
+			"id": "swsh-brilliant-stars-charizard-tg",
+			"title": "Charizard Trainer Gallery Triptych (placeholder)",
+			"series": "Brilliant Stars",
+			"setId": "swsh9",
+			"cards": [
+				{
+					"cardId": "swsh9-PLACEHOLDER-TG01",
+					"position": 1,
+					"name": "Charizard (Trainer Gallery)"
+				},
+				{
+					"cardId": "swsh9-PLACEHOLDER-TG02",
+					"position": 2,
+					"name": "Vileplume (Trainer Gallery)"
+				},
+				{
+					"cardId": "swsh9-PLACEHOLDER-TG03",
+					"position": 3,
+					"name": "Gloom (Trainer Gallery)"
+				}
+			],
+			"notes": "Placeholder — Brilliant Stars TG cards form a known connected scene. Confirm TG numbers."
+		},
+		{
+			"id": "swsh-fusion-strike-mew-mewtwo-pair",
+			"title": "Mew V / Mewtwo V Pair (placeholder)",
+			"series": "Fusion Strike",
+			"setId": "swsh8",
+			"cards": [
+				{
+					"cardId": "swsh8-PLACEHOLDER-MEW-V",
+					"position": 1,
+					"name": "Mew V (Alt Art)"
+				},
+				{
+					"cardId": "swsh8-PLACEHOLDER-MEWTWO-V",
+					"position": 2,
+					"name": "Mewtwo V (Alt Art)"
+				}
+			],
+			"notes": "Placeholder — two-card connected scene of original and clone"
+		},
+		{
+			"id": "sv-paldea-evolved-koraidon-miraidon",
+			"title": "Koraidon / Miraidon Pair (placeholder)",
+			"series": "Paldea Evolved",
+			"setId": "sv02",
+			"cards": [
+				{
+					"cardId": "sv02-PLACEHOLDER-KORAIDON",
+					"position": 1,
+					"name": "Koraidon (Connected Art)"
+				},
+				{
+					"cardId": "sv02-PLACEHOLDER-MIRAIDON",
+					"position": 2,
+					"name": "Miraidon (Connected Art)"
+				}
+			],
+			"notes": "Placeholder — Scarlet & Violet legendary pair"
+		},
+		{
+			"id": "sm-hidden-fates-shiny-eevee-evolution",
+			"title": "Shiny Eevee Evolution Lineup (placeholder)",
+			"series": "Hidden Fates",
+			"setId": "sm115",
+			"cards": [
+				{
+					"cardId": "sm115-PLACEHOLDER-SHINY-EEVEE",
+					"position": 1,
+					"name": "Shiny Eevee"
+				},
+				{
+					"cardId": "sm115-PLACEHOLDER-SHINY-FLAREON",
+					"position": 2,
+					"name": "Shiny Flareon"
+				},
+				{
+					"cardId": "sm115-PLACEHOLDER-SHINY-JOLTEON",
+					"position": 3,
+					"name": "Shiny Jolteon"
+				},
+				{
+					"cardId": "sm115-PLACEHOLDER-SHINY-VAPOREON",
+					"position": 4,
+					"name": "Shiny Vaporeon"
+				}
+			],
+			"notes": "Placeholder — Hidden Fates shiny vault sometimes pairs Eeveelutions"
+		}
+	]
+}
