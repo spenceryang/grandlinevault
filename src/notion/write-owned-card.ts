@@ -15,13 +15,13 @@ export async function createOwnedCardPage(
 	notion: Client,
 	input: AddOwnedCardInput,
 ): Promise<{ pageId: string }> {
-	const databaseId = requireEnv(
-		config.ownedCardsDatabaseId,
-		"OWNED_CARDS_DATABASE_ID",
+	const dataSourceId = requireEnv(
+		config.ownedCardsDataSourceId,
+		"OWNED_CARDS_DATA_SOURCE_ID",
 	);
 
 	const result = await notion.pages.create({
-		parent: { database_id: databaseId },
+		parent: { data_source_id: dataSourceId },
 		properties: {
 			Name: {
 				title: [

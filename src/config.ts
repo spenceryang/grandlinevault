@@ -1,6 +1,9 @@
 export const config = {
-	ownedCardsDatabaseId: process.env.OWNED_CARDS_DATABASE_ID,
-	wishlistsDatabaseId: process.env.WISHLISTS_DATABASE_ID,
+	ownedCardsDataSourceId:
+		process.env.OWNED_CARDS_DATA_SOURCE_ID ??
+		process.env.OWNED_CARDS_DATABASE_ID,
+	wishlistsDataSourceId:
+		process.env.WISHLISTS_DATA_SOURCE_ID ?? process.env.WISHLISTS_DATABASE_ID,
 	giblApiKey: process.env.GIBL_API_KEY,
 	giblGameType: process.env.GIBL_GAME_TYPE ?? "one-piece",
 	catalogFeedUrl: process.env.CATALOG_FEED_URL,

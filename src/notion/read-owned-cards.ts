@@ -3,9 +3,9 @@ import { config, requireEnv } from "../config.js";
 import type { OwnedCardRecord } from "../lib/collection.js";
 
 export async function fetchOwnedCards(notion: Client): Promise<OwnedCardRecord[]> {
-	const databaseId = requireEnv(
-		config.ownedCardsDatabaseId,
-		"OWNED_CARDS_DATABASE_ID",
+	const dataSourceId = requireEnv(
+		config.ownedCardsDataSourceId,
+		"OWNED_CARDS_DATA_SOURCE_ID",
 	);
 
 	const rows: OwnedCardRecord[] = [];
@@ -13,7 +13,7 @@ export async function fetchOwnedCards(notion: Client): Promise<OwnedCardRecord[]
 
 	do {
 		const response = await notion.dataSources.query({
-			data_source_id: databaseId,
+			data_source_id: dataSourceId,
 			start_cursor: startCursor,
 		});
 

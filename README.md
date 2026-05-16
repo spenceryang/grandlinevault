@@ -53,8 +53,8 @@ tests/
 3. Copy `.env.example` to `.env`.
 4. Fill in:
    - `NOTION_API_TOKEN`
-   - `OWNED_CARDS_DATABASE_ID`
-   - `WISHLISTS_DATABASE_ID`
+   - `OWNED_CARDS_DATA_SOURCE_ID`
+   - `WISHLISTS_DATA_SOURCE_ID`
    - `GIBL_API_KEY`
    - `CATALOG_FEED_URL`
    - `PRICE_FEED_URL`
