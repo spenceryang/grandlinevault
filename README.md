@@ -23,7 +23,7 @@ The repository now also contains provider libraries for adjacent expansion track
 | **One Piece TCG / OPTCG** | Core shipped path | Main hackathon demo, Notion databases, scan ingestion, collection management, completion, decks, Luffy Index, related-card recommendations |
 | **PriceCharting** | Library merged, not wired into Worker tools yet | Future graded/raw pricing enrichment; requires a paid PriceCharting token and strict 1 request/sec pacing |
 | **Pokémon / TCGdex** | Library merged, not wired into Notion workspace yet | Future multi-game vault expansion; isolated under `src/providers/tcgdex/` so it does not pollute the One Piece data model |
-| **PSA verification** | Future / PR track | Potential certification lookup and graded-card verification; not part of the current demo loop |
+| **PSA verification** | Provider scaffolds merged; awaiting authenticated docs access to fill in real endpoints | Cert verification, population report, auction prices, price guide, card facts, OAuth 2 password-grant — types and signatures in place; bodies throw not-implemented until the gated PSA docs are accessed and the real endpoint URLs are dropped in |
 
 For judging, present the project as **a Notion-native One Piece card vault with optional provider rails for broader TCG coverage later**.
 
@@ -47,6 +47,11 @@ Every printing of every card — base, parallel, alt-art, promo — gets a row i
 ### Card insights and recommendations
 - **Related cards**: scoring engine that suggests the top-N most-related cards for any given card based on character, set, color identity, sub-types, cost curve, and rarity. Lives both as a managed `Related Cards` database (cached, gallery-browseable) and as an on-demand library call.
 - **Luffy Index ETF**: a price-weighted index that treats every Monkey D. Luffy printing as a constituent of a fund. Track total fund value, top holdings, set distribution, and concentration risk per printing.
+- **Character indices**: same pattern generalized to Zoro, Sanji, Nami, the full Strawhat crew, Yonko, and the Donquixote family. One Notion database with a `Character` select column and per-character filtered views.
+- **Archetype completion**: per-sub-type completion % (Straw Hat Crew, Whitebeard Pirates, Marines, Yonko, …) — the orthogonal axis to set completion. Includes a curated dictionary so multi-word sub-types like `Straw Hat Crew` aren't tokenized as `Straw + Hat + Crew`.
+- **Price movers**: top gainers and losers over rolling 7-day / 30-day windows computed off the daily `priceSnapshots` history. Surfaces "what just spiked" without any new API calls.
+- **Trade matcher**: cross-user join of duplicates ↔ wishlists. Spencer's duplicate Luffy meets Jarren's wishlist Luffy and the system emits a trade suggestion.
+- **Server-side name search**: `filterCatalogCards({ cardName: "Zoro", color: "Red", rarity: "SR" })` — the optcgapi `card_name` filter is now wired through every catalog filter route and agent tool, so character + criteria searches don't have to pull the full 3,330-card catalog client-side.
 - **Collection summaries**: `summarizeCollection` gives totals, top holdings, color/rarity breakdowns per owner. `summarizeMasterSetCompletion` returns base/parallel/total ownership splits per set.
 - **Agent-friendly**: every dataset is a Notion database, so a Custom Agent can answer "what cards am I missing from OP-05?", "what's my biggest Luffy holding?", "which duplicates could I trade?" in plain English.
 
@@ -65,6 +70,15 @@ PriceCharting provider libraries add graded-card market prices (BGS 10, CGC 10, 
 ### Pokémon TCG via TCGdex
 A separate, namespaced provider section wraps the open [TCGdex](https://tcgdex.dev/) API for Pokémon cards, sets, series, and reference metadata. This is merged as future multi-game infrastructure, isolated from the One Piece code path and Notion data model.
 
+### PSA grading hooks
+Scaffolded provider stubs for PSA Public API integration — Cert Verification, Population Report, Auction Prices, Price Guide, Card Facts, and OAuth 2 password-grant token exchange. PSA's full endpoint reference is gated behind their authenticated docs page, so the stubs throw a clear not-implemented error pointing at the real URL; types and function signatures are in place so callers can wire against them once Spencer has dashboard access.
+
+### Email intake (Resend Inbound)
+Collectors can **email** card photos to a configured Resend Inbound address (e.g. `scans@grandlinevault.com`) and the worker turns each delivered email into one or more Scan Inbox rows tied to the sender. Includes Svix-style HMAC signature verification, 5-minute replay protection, and an image-only attachment filter to stop "free PDF upload" mischief.
+
+### Email outbound (Resend Send)
+Companion outbound library with three ready-to-use HTML templates: **scan receipt** (matched card + image + Notion link), **trade match** (when a duplicate ↔ wishlist match fires), and **promotional** (new set drops, feature announcements). All templates escape user-controlled fields against HTML injection.
+
 ## Templates
 
 The Worker provisions and populates a set of managed Notion databases that each act as a reusable template. Every one has gallery-friendly imagery or progress-bar-ready numeric columns so collectors can browse the way they prefer.
@@ -80,6 +94,10 @@ The Worker provisions and populates a set of managed Notion databases that each 
 | **Decks** | `decks` | `src/notion/decks-database.ts` | One row per deck — Leader, Format, Status, Card Count, Estimated Value |
 | **Decklist Entries** | `decklistEntries` | `src/notion/decklist-entries-database.ts` | Per-(deck, card) rows for the **card list + image gallery** dual view, with quantity and slot |
 | **Related Cards** | `relatedCards` | `src/notion/related-cards-database.ts` | One row per (source, recommended) pair with score and colored reason chips |
+| **Character Indices** | `characterIndex` | `src/notion/character-index-database.ts` | Multi-character ETF board (Luffy, Zoro, Sanji, Nami, Strawhat, Yonko, Donquixote) with `Index Weight` progress bars |
+| **Archetype Completion** | `subTypeCompletion` | `src/notion/sub-type-completion-database.ts` | Per-sub-type completion % (Straw Hat Crew, Whitebeard Pirates, Marines, etc.) with progress bars |
+| **Price Movers** | `priceMovers` | `src/notion/price-movers-database.ts` | Daily/weekly gainers and losers diffed from `priceSnapshots` history |
+| **Trade Matches** | `tradeMatches` | `src/notion/trade-matches-database.ts` | Cross-user duplicate ↔ wishlist join, with priority and status tracking |
 | **Price Snapshots** | `priceSnapshots` | `src/index.ts` | Time-series price records per card; foundation for portfolio history |
 | **Scan Inbox** | user-created | `docs/NOTION_WORKSPACE_SETUP.md` | Upload front/back images, see status, link to the matched owned card |
 | **Owned Cards** | user-created | `docs/NOTION_WORKSPACE_SETUP.md` | The per-owner source of truth — quantity, condition, scan, pre-grade, current value |
@@ -87,10 +105,15 @@ The Worker provisions and populates a set of managed Notion databases that each 
 
 ### Template guides
 
-- [Master Set tracking](./docs/LUFFY_INDEX_ETF.md) — Luffy Index ETF deep-dive + methodology
-- [Gallery views recipe](./docs/GALLERY_VIEWS.md) — how to flip any card database to image-first browsing
-- [Decklist template](./docs/DECKLIST_TEMPLATE.md) — deck builder docs with recommended views (card list, image wall, cost curve, by color)
+- [Luffy Index ETF](./docs/LUFFY_INDEX_ETF.md) — deep-dive + methodology
+- [Character indices](./docs/CHARACTER_INDICES.md) — Zoro / Sanji / Strawhat / Yonko / Donquixote indices on the same library
+- [Archetype completion](./docs/SUB_TYPE_COMPLETION.md) — per-sub-type completion % with curated dictionary
+- [Price movers](./docs/PRICE_MOVERS.md) — top gainers and losers over a rolling window
+- [Trade matcher](./docs/TRADE_MATCHER.md) — duplicate ↔ wishlist join across owners
+- [Decklist template](./docs/DECKLIST_TEMPLATE.md) — deck builder with recommended views (card list, image wall, cost curve, by color)
 - [Related cards scoring](./docs/RELATED_CARDS.md) — scoring weights + wiring snippet + future enhancements
+- [Gallery views recipe](./docs/GALLERY_VIEWS.md) — how to flip any card database to image-first browsing
+- [Resend inbound scans](./docs/RESEND_INBOUND_SCANS.md) — email card photos to your inbox, get scan rows
 - [Notion workspace setup](./docs/NOTION_WORKSPACE_SETUP.md) — initial provisioning of the user-managed databases
 
 ## Current status
@@ -109,8 +132,15 @@ The Worker provisions and populates a set of managed Notion databases that each 
 - Managed syncs for card catalog, price snapshots, master set, and set analytics (ownership-aware completion %).
 - Agent tools for lookup, enrichment, collection summaries, duplicate detection, and master-set completion.
 - Decklist template with card-list + image-gallery views and OPTCG validator.
-- Luffy Index ETF template with price weighting and concentration analytics.
+- Luffy Index ETF + Character Indices (Zoro/Sanji/Nami/Strawhat/Yonko/Donquixote) with price weighting and concentration analytics.
 - Related-cards scoring engine and managed `Related Cards` board.
+- Archetype/sub-type completion engine with curated OPTCG dictionary.
+- Price movers engine (top gainers/losers over 7d/30d windows) reading the existing `priceSnapshots` time-series.
+- Trade matcher engine (duplicate ↔ wishlist join across owners).
+- Server-side `cardName` filter wired through every catalog / starter-deck / promo filter route.
+- Resend inbound parser + signature verification for email-as-intake.
+- Resend outbound helpers with HTML templates for scan receipts, trade matches, and promotional emails.
+- PSA Public API scaffolds (cert verification, population, auction prices, price guide, card facts, OAuth 2 password-grant).
 - Seed scan test with OP13-118 Monkey.D.Luffy and OP13-119 Portgas.D.Ace.
 
 ### Still intentionally open
@@ -133,9 +163,15 @@ flowchart LR
     D --> H["Managed Price Snapshots"]
     D --> I["Managed Master Set"]
     D --> J["Set Analytics Dashboard"]
-    D --> K["Luffy Index ETF"]
+    D --> K["Luffy Index ETF + Character Indices"]
     D --> L["Related Cards"]
     D --> M["Decks + Decklist Entries"]
+    D --> N["Price Movers"]
+    D --> O["Archetype Completion"]
+    E --> P["Trade Matches"]
+    F --> P
+    Q["Resend inbound (email scans)"] --> A
+    B --> R["Resend outbound (receipts, trades, promos)"]
 ```
 
 ## Worker capabilities
@@ -234,8 +270,13 @@ docs/
   NOTION_WORKSPACE_SETUP.md   Initial workspace provisioning
   GALLERY_VIEWS.md            Image-gallery view recipes
   LUFFY_INDEX_ETF.md          Luffy Index ETF concept and methodology
+  CHARACTER_INDICES.md        Zoro / Strawhat / Yonko / Donquixote indices
+  SUB_TYPE_COMPLETION.md      Archetype/sub-type completion + dictionary
+  PRICE_MOVERS.md             Top gainers/losers over rolling windows
+  TRADE_MATCHER.md            Cross-user duplicate ↔ wishlist matching
   DECKLIST_TEMPLATE.md        Deck builder template walkthrough
   RELATED_CARDS.md            Related-cards scoring engine
+  RESEND_INBOUND_SCANS.md     Email-as-intake for card scans
 GRAND_LINE_VAULT_SPEC.md      Product/team spec
 CHANGELOG.md                  Release notes
 ```
