@@ -1,4 +1,5 @@
 import * as Schema from "@notionhq/workers/schema";
+import { emojiIcon } from "@notionhq/workers/builder";
 
 export const WISHLIST_INSIGHTS_DATABASE_KEY = "wishlistInsights";
 
@@ -7,6 +8,7 @@ export const wishlistInsightsDatabaseConfig = {
 	initialTitle: "Wishlist Insights",
 	primaryKeyProperty: "Insight ID" as const,
 	schema: {
+		databaseIcon: emojiIcon("🌠"),
 		properties: {
 			"Card Name": Schema.title(),
 			"Insight ID": Schema.richText(),
@@ -40,6 +42,7 @@ export const wishlistBudgetDatabaseConfig = {
 	initialTitle: "Wishlist Budget",
 	primaryKeyProperty: "Owner" as const,
 	schema: {
+		databaseIcon: emojiIcon("💰"),
 		properties: {
 			Owner: Schema.title(),
 			"Open Items": Schema.number(),

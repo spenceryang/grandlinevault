@@ -1,4 +1,5 @@
 import * as Schema from "@notionhq/workers/schema";
+import { emojiIcon } from "@notionhq/workers/builder";
 
 export const MASTER_SET_DATABASE_KEY = "masterSet";
 
@@ -7,6 +8,7 @@ export const masterSetDatabaseConfig = {
 	initialTitle: "Master Set",
 	primaryKeyProperty: "Variant ID" as const,
 	schema: {
+		databaseIcon: emojiIcon("🗺️"),
 		properties: {
 			Name: Schema.title(),
 			"Variant ID": Schema.richText(),

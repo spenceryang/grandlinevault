@@ -1,4 +1,5 @@
 import * as Schema from "@notionhq/workers/schema";
+import { emojiIcon } from "@notionhq/workers/builder";
 
 export const TRADE_MATCHES_DATABASE_KEY = "tradeMatches";
 
@@ -7,6 +8,7 @@ export const tradeMatchesDatabaseConfig = {
 	initialTitle: "Trade Matches",
 	primaryKeyProperty: "Match ID" as const,
 	schema: {
+		databaseIcon: emojiIcon("🤝"),
 		properties: {
 			"Card Name": Schema.title(),
 			"Match ID": Schema.richText(),

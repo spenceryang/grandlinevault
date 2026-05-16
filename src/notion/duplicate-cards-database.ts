@@ -1,4 +1,5 @@
 import * as Schema from "@notionhq/workers/schema";
+import { emojiIcon } from "@notionhq/workers/builder";
 
 export const DUPLICATE_CARDS_DATABASE_KEY = "duplicateCards";
 
@@ -7,6 +8,7 @@ export const duplicateCardsDatabaseConfig = {
 	initialTitle: "Duplicate Cards",
 	primaryKeyProperty: "Duplicate ID" as const,
 	schema: {
+		databaseIcon: emojiIcon("🔁"),
 		properties: {
 			"Card Name": Schema.title(),
 			"Duplicate ID": Schema.richText(),
@@ -34,6 +36,7 @@ export const duplicateOwnerSummaryDatabaseConfig = {
 	initialTitle: "Duplicate Owner Summary",
 	primaryKeyProperty: "Owner" as const,
 	schema: {
+		databaseIcon: emojiIcon("📦"),
 		properties: {
 			Owner: Schema.title(),
 			"Unique Duplicate Cards": Schema.number(),

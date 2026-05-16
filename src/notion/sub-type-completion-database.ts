@@ -1,4 +1,5 @@
 import * as Schema from "@notionhq/workers/schema";
+import { emojiIcon } from "@notionhq/workers/builder";
 
 export const SUB_TYPE_COMPLETION_DATABASE_KEY = "subTypeCompletion";
 
@@ -7,6 +8,7 @@ export const subTypeCompletionDatabaseConfig = {
 	initialTitle: "Archetype Completion",
 	primaryKeyProperty: "Sub Type" as const,
 	schema: {
+		databaseIcon: emojiIcon("🎯"),
 		properties: {
 			"Sub Type": Schema.title(),
 			Total: Schema.number(),

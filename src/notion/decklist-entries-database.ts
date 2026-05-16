@@ -1,4 +1,5 @@
 import * as Schema from "@notionhq/workers/schema";
+import { emojiIcon } from "@notionhq/workers/builder";
 import { DECKS_DATABASE_KEY } from "./decks-database.js";
 
 export const DECKLIST_ENTRIES_DATABASE_KEY = "decklistEntries";
@@ -8,6 +9,7 @@ export const decklistEntriesDatabaseConfig = {
 	initialTitle: "Decklist Entries",
 	primaryKeyProperty: "Entry ID" as const,
 	schema: {
+		databaseIcon: emojiIcon("📜"),
 		properties: {
 			"Card Name": Schema.title(),
 			"Entry ID": Schema.richText(),

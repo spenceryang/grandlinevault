@@ -1,4 +1,5 @@
 import * as Schema from "@notionhq/workers/schema";
+import { emojiIcon } from "@notionhq/workers/builder";
 
 export const LUFFY_INDEX_DATABASE_KEY = "luffyIndex";
 
@@ -7,6 +8,7 @@ export const luffyIndexDatabaseConfig = {
 	initialTitle: "Luffy Index ETF",
 	primaryKeyProperty: "Variant ID" as const,
 	schema: {
+		databaseIcon: emojiIcon("🏴‍☠️"),
 		properties: {
 			Name: Schema.title(),
 			"Variant ID": Schema.richText(),
