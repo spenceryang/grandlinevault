@@ -8,6 +8,12 @@
 
 Collectors spend their attention in three places: **getting cards in**, **looking at what they own**, and **deciding what to do next**. Most tools nail one of those at the cost of the others. We're trying to do all three in a single Notion workspace because Notion is already where everything else in your life lives — your trip plans, your notes, your work doc.
 
+## Why this matters
+
+The card market is enormous: sealed product, singles, grading, marketplaces, content, and local communities all point at the same underlying behavior — people are emotionally and financially invested in small pieces of cardboard. But the individual collector's workflow is still fragmented. A collector may buy in one place, track value in another, keep deck ideas in a third, and show off screenshots in a group chat.
+
+Grand Line Vault starts with the personal collector because that is where the daily pain is. The product should make someone proud to open their collection, proud to share it, and confident enough to ask, "what should I do next?" The market is big, but the wedge is intimate: **make one person's collection feel alive.**
+
 ## How we make it easy
 
 ### Easy intake — meet collectors where they already are
@@ -36,7 +42,8 @@ Front-only scans work; front+back unlocks the pre-grade estimate (centering / co
 
 Notion gives us free gallery views, board views, table views, and progress-bar rendering on percent properties. We use all of them:
 
-- **Card Wall** gallery view of every card you own
+- **Card Wall** gallery view of every card you own, with each owned card's image promoted to the page cover so the collection feels like a digital binder rather than a spreadsheet
+- **Trophy Case** sorted by market price so collectors can showcase the cards they're proudest of
 - **Master Set Dashboard** — every printing per set, base/parallel/alt-art/promo classified, with a `Completion %` column that renders as a per-set progress bar
 - **Luffy Index ETF** + **Character Indices** (Zoro, Sanji, Strawhat crew, Yonko, Donquixote) — price-weighted index per character with `Index Weight` rendered as a bar
 - **Set Completion Dashboard** — per-set progress + total + owned market value, daily refresh
@@ -60,6 +67,8 @@ Collectors play. So the workspace doubles as a deck builder:
 - **Decks** database with one row per deck (Leader, Format, Status, Card Count, Estimated Value).
 - **Decklist Entries** with two-way relation to Decks. The same data renders as a **card list** (table grouped by Slot, sorted by Cost) AND as an **image gallery** (Card Wall for the deck). Switch views, the data stays in sync.
 - **OPTCG validator** — `validateOptcgDecklist` checks construction rules (1 Leader, 50 main deck, 10 DON!!, max 4 copies, color identity warnings).
+
+This area is intentionally still growing. The shipped template proves the Notion-native shape; the next layer is faster deck entry, better wishlist-to-deck gap analysis, and agent prompts like "what cards do I need to finish this Zoro deck?"
 
 ### Notion-native = agent-native
 
@@ -119,12 +128,19 @@ The judge takeaway:
 
 ## What we're explicitly not chasing (yet)
 
-- Full marketplace checkout (P2 — start as outbound marketplace links)
+- Full marketplace checkout (P2 — start as outbound marketplace links, then graduate to checkout only after recommendations and wishlists are reliable)
 - Official PSA grading replacement (we frame everything as **pre-grade** estimates)
 - Japanese / Chinese / multilingual card support (English-only for P0)
 - Mobile app outside Notion (the mobile path is "Apple Shortcut emails the image, Resend Inbound picks it up")
 - Deck simulator
 - High-frequency intraday trading dashboard
+
+## Next product bets
+
+- **Wishlists** — make chase cards more actionable: target price, priority, reason, set-completion impact, and "why this card next?"
+- **Deck builder** — move from a good storage template to an assistant that can compare a decklist against your owned cards and wishlist the missing pieces.
+- **Showcase / sharing** — visual collection walls and share graphics should make collectors proud to send the Vault to friends.
+- **Marketplace links** — start with outbound links for recommended cards. Do not attempt full checkout until the recommendation layer is trusted.
 
 ## Open questions
 
