@@ -13,7 +13,7 @@ Live workspace: [Grand Line Vault in Notion](https://www.notion.so/Grand-Line-Va
 Grand Line Vault is scoped as a **One Piece TCG-first collector workspace** for the Notion hackathon. The demo path stays focused on English One Piece cards:
 
 ```text
-Scan Inbox image upload → Agent processes scan → OPTCG enrichment → Owned Cards gallery → set completion / portfolio / recommendations
+Scan Inbox image upload → Agent processes scan → Notion stores the owned card → Slack asks the Agent → Notion answers from the vault
 ```
 
 The repository now also contains provider libraries for adjacent expansion tracks. These are intentionally secondary:
@@ -25,7 +25,37 @@ The repository now also contains provider libraries for adjacent expansion track
 | **Pokémon / TCGdex** | Library merged, not wired into Notion workspace yet | Future multi-game vault expansion; isolated under `src/providers/tcgdex/` so it does not pollute the One Piece data model |
 | **PSA verification** | Provider scaffolds merged; awaiting authenticated docs access to fill in real endpoints | Cert verification, population report, auction prices, price guide, card facts, OAuth 2 password-grant — types and signatures in place; bodies throw not-implemented until the gated PSA docs are accessed and the real endpoint URLs are dropped in |
 
-For judging, present the project as **a Notion-native One Piece card vault with optional provider rails for broader TCG coverage later**.
+For judging, present the project as **a Notion-native One Piece card vault with Slack as the conversational front door**. Optional provider rails support broader TCG coverage later, but the judged path is the One Piece collector loop.
+
+## Demo flow
+
+The current hackathon demo uses Slack + Notion together:
+
+```text
+1. Collector uploads an English One Piece card image to the Notion Scan Inbox.
+2. Vault Quartermaster / Notion Agent processes the latest scan through the Worker.
+3. The Worker recognizes the card, enriches it from OPTCG data, and creates or updates an Owned Card row.
+4. Collector asks in Slack: “What card did I just scan?” or “Show my OP-01 cards.”
+5. Notion Agent answers from the Grand Line Vault Notion workspace and links back to the source data.
+```
+
+Validated Slack examples:
+
+```text
+@Notion AI show my OP-01 cards
+→ Returns OP-01 owned cards across the crew with owner, quantity, type, color, and market price.
+
+@Notion AI which is the most expensive?
+→ Uses the previous OP-01 context and returns Roronoa Zoro (001) Parallel — OP01-001 Parallel — $556.77.
+```
+
+Agent behavior rules for the demo:
+
+- Treat Notion as the source of truth. Read from Grand Line Vault databases, not memory.
+- Default to the requesting user's cards when the owner is clear; say explicitly when showing all crew cards.
+- Prefer clean display IDs like `OP01-001 Parallel` instead of internal IDs like `OP01-001_p1`.
+- Include card name, set/card number, rarity or type, color, quantity, owner, market price, and a Notion link when available.
+- If scan automation is unavailable, use the manual fallback: upload image, leave status as `New`, then run `processLatestScan` or ask the Agent to process the latest scan.
 
 ## Features
 
@@ -53,7 +83,7 @@ Every printing of every card — base, parallel, alt-art, promo — gets a row i
 - **Trade matcher**: cross-user join of duplicates ↔ wishlists. Spencer's duplicate Luffy meets Jarren's wishlist Luffy and the system emits a trade suggestion.
 - **Server-side name search**: `filterCatalogCards({ cardName: "Zoro", color: "Red", rarity: "SR" })` — the optcgapi `card_name` filter is now wired through every catalog filter route and agent tool, so character + criteria searches don't have to pull the full 3,330-card catalog client-side.
 - **Collection summaries**: `summarizeCollection` gives totals, top holdings, color/rarity breakdowns per owner. `summarizeMasterSetCompletion` returns base/parallel/total ownership splits per set.
-- **Agent-friendly**: every dataset is a Notion database, so a Custom Agent can answer "what cards am I missing from OP-05?", "what's my biggest Luffy holding?", "which duplicates could I trade?" in plain English.
+- **Slack + Agent-friendly**: every dataset is a Notion database, so Vault Quartermaster can answer from Slack or Notion: "what card did I just scan?", "show my OP-01 cards", "which card is most expensive?", "what cards am I missing from OP-05?", and "which duplicates could I trade?"
 
 ### Deck building
 Two related databases (`Decks` + `Decklist Entries`) plus a validator that checks OPTCG construction rules (1 Leader, 50 main, 10 DON!!, max 4 copies, color identity). Same rows render as a **card list** (table grouped by Slot) and as an **image gallery** in Notion — switch views, the data stays in sync.
@@ -122,6 +152,7 @@ The Worker provisions and populates a set of managed Notion databases that each 
 
 - Public GitHub repo and deployed Notion Worker.
 - Notion command center with embedded collection, scan inbox, wishlist, and master-set views.
+- Slack-connected Notion Agent flow: ask Vault Quartermaster questions like `show my OP-01 cards` or `what card did I just scan`, and it answers from the Grand Line Vault Notion data.
 - Scan Inbox, Owned Cards, Wishlists, and Master Set databases.
 - Gallery, set-completion, owner, duplicate, wishlist, and portfolio-style views in Notion.
 - GIBL image-recognition integration for the scan path.
@@ -154,7 +185,8 @@ The Worker provisions and populates a set of managed Notion databases that each 
 
 ```mermaid
 flowchart LR
-    A["Notion pages and Agent commands"] --> B["Grand Line Vault Worker"]
+    S["Slack collector questions"] --> A["Notion Agent / Grand Line Vault pages"]
+    A --> B["Grand Line Vault Worker"]
     B --> C["GIBL recognition"]
     B --> D["OPTCG API"]
     B --> E["Owned Cards DB"]

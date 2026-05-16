@@ -110,7 +110,18 @@ Grand Line Vault
 ## Demo path
 
 1. Create a Scan Inbox row.
-2. Upload a card-front image to `Front image`.
-3. Ask the Agent to run `processLatestScan` for one row, or `processScanInboxQueue` for a batch.
-4. Open the Owned Cards Gallery view.
-5. Show portfolio charts from `Price Snapshots`.
+2. Upload an English One Piece card-front image to `Front image`.
+3. Ask Vault Quartermaster / Notion Agent to process the latest scan. If needed, use `processLatestScan` for one row or `processScanInboxQueue` for a batch.
+4. Ask from Slack: `what card did I just scan?`
+5. Ask from Slack: `show my OP-01 cards`, then follow up with `which is the most expensive?`
+6. Open the Owned Cards Gallery view and Set Completion Dashboard in Notion to show the source data.
+
+## Slack Agent instructions
+
+Use these rules in the Notion Custom Agent connected to Slack:
+
+- Treat the Grand Line Vault Notion page and databases as the source of truth.
+- Default to the requesting user's owned cards when the owner is clear; say explicitly when showing all crew cards.
+- For follow-up questions, preserve the previous filter context. Example: after `show my OP-01 cards`, `which is the most expensive?` should mean the most expensive OP-01 result.
+- Prefer collector-friendly IDs like `OP01-001 Parallel`; avoid exposing internal variant IDs like `OP01-001_p1` unless useful for debugging.
+- Include card name, set/card number, rarity or type, color, quantity, owner, market price, and a Notion link when available.
