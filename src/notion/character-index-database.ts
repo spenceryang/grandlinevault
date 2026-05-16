@@ -1,4 +1,5 @@
 import * as Schema from "@notionhq/workers/schema";
+import { emojiIcon } from "@notionhq/workers/builder";
 
 export const CHARACTER_INDEX_DATABASE_KEY = "characterIndex";
 
@@ -7,6 +8,7 @@ export const characterIndexDatabaseConfig = {
 	initialTitle: "Character Indices",
 	primaryKeyProperty: "Entry ID" as const,
 	schema: {
+		databaseIcon: emojiIcon("⚔️"),
 		properties: {
 			Name: Schema.title(),
 			"Entry ID": Schema.richText(),

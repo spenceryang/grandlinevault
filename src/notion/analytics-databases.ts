@@ -1,4 +1,5 @@
 import * as Schema from "@notionhq/workers/schema";
+import { emojiIcon } from "@notionhq/workers/builder";
 
 export const SET_ANALYTICS_DATABASE_KEY = "setAnalytics";
 
@@ -7,6 +8,7 @@ export const setAnalyticsDatabaseConfig = {
 	initialTitle: "Set Completion Dashboard",
 	primaryKeyProperty: "Set ID" as const,
 	schema: {
+		databaseIcon: emojiIcon("📊"),
 		properties: {
 			"Set Name": Schema.title(),
 			"Set ID": Schema.richText(),
@@ -30,6 +32,7 @@ export const rarityAnalyticsDatabaseConfig = {
 	initialTitle: "Rarity Breakdown",
 	primaryKeyProperty: "Rarity" as const,
 	schema: {
+		databaseIcon: emojiIcon("✨"),
 		properties: {
 			Rarity: Schema.title(),
 			Count: Schema.number(),
@@ -48,6 +51,7 @@ export const topCardsDatabaseConfig = {
 	initialTitle: "Top Cards by Value",
 	primaryKeyProperty: "Variant ID" as const,
 	schema: {
+		databaseIcon: emojiIcon("💎"),
 		properties: {
 			Name: Schema.title(),
 			"Variant ID": Schema.richText(),
