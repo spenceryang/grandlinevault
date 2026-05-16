@@ -23,7 +23,7 @@ The repository now also contains provider libraries for adjacent expansion track
 | **One Piece TCG / OPTCG** | Core shipped path | Main hackathon demo, Notion databases, scan ingestion, collection management, completion, decks, Luffy Index, related-card recommendations |
 | **PriceCharting** | Library merged, not wired into Worker tools yet | Future graded/raw pricing enrichment; requires a paid PriceCharting token and strict 1 request/sec pacing |
 | **Pokémon / TCGdex** | Library merged, not wired into Notion workspace yet | Future multi-game vault expansion; isolated under `src/providers/tcgdex/` so it does not pollute the One Piece data model |
-| **PSA verification** | Future / PR track | Potential certification lookup and graded-card verification; not part of the current demo loop |
+| **PSA verification** | Provider scaffolds merged; awaiting authenticated docs access to fill in real endpoints | Cert verification, population report, auction prices, price guide, card facts, OAuth 2 password-grant — types and signatures in place; bodies throw not-implemented until the gated PSA docs are accessed and the real endpoint URLs are dropped in |
 
 For judging, present the project as **a Notion-native One Piece card vault with optional provider rails for broader TCG coverage later**.
 
