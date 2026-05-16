@@ -133,6 +133,24 @@ test("filterOptcgStarterCards builds query string and parses results", async () 
 	}
 });
 
+test("filterOptcgStarterCards passes cardName through", async () => {
+	const originalFetch = globalThis.fetch;
+	let capturedUrl = "";
+	globalThis.fetch = (async (input: string | URL | Request) => {
+		capturedUrl = String(input);
+		return new Response(JSON.stringify([sampleCard]), {
+			status: 200,
+			headers: { "content-type": "application/json" },
+		});
+	}) as typeof fetch;
+	try {
+		await filterOptcgStarterCards({ cardName: "Luffy" });
+		assert.match(capturedUrl, /card_name=Luffy/);
+	} finally {
+		globalThis.fetch = originalFetch;
+	}
+});
+
 test("filterOptcgStarterCards rejects when no filters provided", async () => {
 	await assert.rejects(
 		() => filterOptcgStarterCards({}),
