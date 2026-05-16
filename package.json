@@ -1,0 +1,33 @@
+{
+  "name": "grandlinevault",
+  "version": "0.1.0",
+  "description": "Notion-native One Piece Card Game collection manager for the Notion hackathon.",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "tsx --test tests/*.test.ts"
+  },
+  "keywords": [
+    "notion",
+    "one-piece",
+    "tcg",
+    "collector",
+    "workers"
+  ],
+  "author": "spenceryang",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=10.9.2"
+  },
+  "dependencies": {
+    "@notionhq/workers": "^0.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.8.0",
+    "tsx": "^4.22.0",
+    "typescript": "^6.0.3"
+  }
+}
