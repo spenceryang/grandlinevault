@@ -17,10 +17,30 @@ import {
 } from "./notion/master-set-database.js";
 import { fetchOwnedCards } from "./notion/read-owned-cards.js";
 import { createOwnedCardPage } from "./notion/write-owned-card.js";
+import { listAllOptcgDonCards } from "./providers/optcgapi/don-cards.js";
 import { filterOptcgCards } from "./providers/optcgapi/filter-cards.js";
 import { getOptcgCard } from "./providers/optcgapi/get-card.js";
 import { getOptcgSet } from "./providers/optcgapi/get-set.js";
+import {
+	groupCardsBySet,
+	listAllOptcgSetCards,
+} from "./providers/optcgapi/list-all-set-cards.js";
 import { listAllOptcgSets } from "./providers/optcgapi/list-all-sets.js";
+import {
+	filterOptcgPromoCards,
+	getOptcgPromoCard,
+} from "./providers/optcgapi/promos.js";
+import {
+	filterOptcgStarterCards,
+	getOptcgStarterCard,
+	getOptcgStarterDeck,
+	listAllOptcgStarterCards,
+	listAllOptcgStarterDecks,
+} from "./providers/optcgapi/starter-decks.js";
+import {
+	SET_ANALYTICS_DATABASE_KEY,
+	setAnalyticsDatabaseConfig,
+} from "./notion/analytics-databases.js";
 import { fetchEnglishCatalogPage } from "./providers/catalog.js";
 import { fetchPriceSnapshots } from "./providers/pricing.js";
 import {
@@ -77,6 +97,11 @@ const priceSnapshots = worker.database("priceSnapshots", {
 const masterSet = worker.database(
 	MASTER_SET_DATABASE_KEY,
 	masterSetDatabaseConfig,
+);
+
+const setAnalytics = worker.database(
+	SET_ANALYTICS_DATABASE_KEY,
+	setAnalyticsDatabaseConfig,
 );
 
 const externalApiPacer = worker.pacer("externalApis", {
@@ -325,6 +350,51 @@ worker.sync("syncOptcgMasterSet", {
 	},
 });
 
+worker.sync("syncOptcgSetAnalytics", {
+	database: setAnalytics,
+	mode: "replace",
+	schedule: "1d",
+	execute: async () => {
+		await externalApiPacer.wait();
+		const cards = await listAllOptcgSetCards();
+		const grouped = groupCardsBySet(cards);
+
+		return {
+			changes: Array.from(grouped.entries()).map(([setId, setCards]) => {
+				const total = setCards.length;
+				const baseCount = setCards.filter(
+					(c) => c.cardImageId === c.cardSetId,
+				).length;
+				const parallelCount = total - baseCount;
+				const totalValue = setCards.reduce(
+					(sum, c) => sum + (c.marketPrice ?? 0),
+					0,
+				);
+				return {
+					type: "upsert" as const,
+					key: setId,
+					properties: {
+						"Set Name": Builder.title(setCards[0].setName ?? setId),
+						"Set ID": Builder.richText(setId),
+						"Total Cards": Builder.number(total),
+						Owned: Builder.number(0),
+						"Completion %": Builder.number(0),
+						"Base Owned": Builder.number(0),
+						"Base Total": Builder.number(baseCount),
+						"Parallel Owned": Builder.number(0),
+						"Parallel Total": Builder.number(parallelCount),
+						"Total Value": Builder.number(
+							Math.round(totalValue * 100) / 100,
+						),
+						"Owned Value": Builder.number(0),
+					},
+				};
+			}),
+			hasMore: false,
+		};
+	},
+});
+
 worker.tool("identifyCard", {
 	title: "Identify One Piece Card",
 	description:
@@ -541,5 +611,132 @@ worker.tool("listDuplicateCards", {
 			ownerName,
 			duplicates: findDuplicates(ownerName, cards),
 		};
+	},
+});
+
+worker.tool("listStarterDecks", {
+	title: "List Starter Decks",
+	description:
+		"List every published One Piece TCG starter deck (e.g. ST-01 'Straw Hat Crew').",
+	schema: j.object({}),
+	hints: { readOnlyHint: true },
+	execute: async () => {
+		return { decks: await listAllOptcgStarterDecks() };
+	},
+});
+
+worker.tool("getStarterDeckCards", {
+	title: "Get Starter Deck Cards",
+	description:
+		"Fetch the contents of a starter deck by id (e.g. ST-01) — Leader plus the bundled cards.",
+	schema: j.object({
+		structureDeckId: j.string(),
+	}),
+	hints: { readOnlyHint: true },
+	execute: async ({ structureDeckId }) => {
+		return {
+			structureDeckId,
+			cards: await getOptcgStarterDeck(structureDeckId),
+		};
+	},
+});
+
+worker.tool("getStarterCardDetails", {
+	title: "Get Starter Card Details",
+	description:
+		"Fetch variants, image, and pricing for a single starter-deck card id (e.g. ST01-001).",
+	schema: j.object({
+		cardSetId: j.string(),
+	}),
+	hints: { readOnlyHint: true },
+	execute: async ({ cardSetId }) => {
+		return {
+			cardSetId,
+			variants: await getOptcgStarterCard(cardSetId),
+		};
+	},
+});
+
+worker.tool("filterStarterCards", {
+	title: "Filter Starter Deck Cards",
+	description:
+		"Filter starter-deck cards by color, type, cost, or rarity. Provide at least one filter.",
+	schema: j.object({
+		color: j.string().nullable(),
+		cardType: j.string().nullable(),
+		cost: j.string().nullable(),
+		rarity: j.string().nullable(),
+	}),
+	hints: { readOnlyHint: true },
+	execute: async ({ color, cardType, cost, rarity }) => {
+		return {
+			cards: await filterOptcgStarterCards({
+				color: color ?? undefined,
+				cardType: cardType ?? undefined,
+				cost: cost ?? undefined,
+				rarity: rarity ?? undefined,
+			}),
+		};
+	},
+});
+
+worker.tool("listAllStarterCards", {
+	title: "List All Starter Cards",
+	description:
+		"Bulk endpoint — every card across every starter deck in a single call.",
+	schema: j.object({}),
+	hints: { readOnlyHint: true },
+	execute: async () => {
+		return { cards: await listAllOptcgStarterCards() };
+	},
+});
+
+worker.tool("getPromoCardDetails", {
+	title: "Get Promo Card Details",
+	description:
+		"Fetch variants, image, and pricing for a One Piece TCG promo card by id (e.g. P-001).",
+	schema: j.object({
+		cardSetId: j.string(),
+	}),
+	hints: { readOnlyHint: true },
+	execute: async ({ cardSetId }) => {
+		return {
+			cardSetId,
+			variants: await getOptcgPromoCard(cardSetId),
+		};
+	},
+});
+
+worker.tool("filterPromoCards", {
+	title: "Filter Promo Cards",
+	description:
+		"Filter One Piece TCG promo cards by color, type, cost, or rarity. Provide at least one filter.",
+	schema: j.object({
+		color: j.string().nullable(),
+		cardType: j.string().nullable(),
+		cost: j.string().nullable(),
+		rarity: j.string().nullable(),
+	}),
+	hints: { readOnlyHint: true },
+	execute: async ({ color, cardType, cost, rarity }) => {
+		return {
+			cards: await filterOptcgPromoCards({
+				color: color ?? undefined,
+				cardType: cardType ?? undefined,
+				cost: cost ?? undefined,
+				rarity: rarity ?? undefined,
+			}),
+		};
+	},
+});
+
+worker.tool("listDonCards", {
+	title: "List DON!! Cards",
+	description:
+		"List every DON!! resource card in the One Piece TCG catalog with rarity, art, and pricing.",
+	schema: j.object({}),
+	hints: { readOnlyHint: true },
+	execute: async () => {
+		return { cards: await listAllOptcgDonCards() };
 	},
 });
