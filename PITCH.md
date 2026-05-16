@@ -14,6 +14,19 @@ The card market is enormous: sealed product, singles, grading, marketplaces, con
 
 Grand Line Vault starts with the personal collector because that is where the daily pain is. The product should make someone proud to open their collection, proud to share it, and confident enough to ask, "what should I do next?" The market is big, but the wedge is intimate: **make one person's collection feel alive.**
 
+## Beyond the personal collector — shops, vendors, and high-volume sellers
+
+The same Notion-native model that helps an individual collector also gives **card shops, online vendors, and high-volume sellers** a workspace they did not have before:
+
+- **Inventory tracking that doesn't fight you** — a card shop with thousands of singles can list each card as an Owned Card row, with quantity, condition, scan provenance, and live market price. The Card Wall + Master Set views double as a customer-facing visual catalog.
+- **Duplicate management at scale** — the Duplicate Cards dashboard already surfaces tradeable copies + a "Sell" status per row. For a vendor that pulls cases weekly, this becomes the shipping queue: filter `Status = Sell`, sort by tradeable value desc, print labels off the top of the list.
+- **Per-card asking price** — the same `Wishlist Insights` price-target structure flips for sellers: set the *floor* you'll let a card go for; when market price rises above floor, the row surfaces as "list it now."
+- **Multi-user crews → multi-staff shops** — the existing Owner column already separates inventory by person. A two-employee shop can run the same workspace with one row per employee's pulls; rolled-up dashboards still show shop-wide totals.
+- **Customer-facing share graphics** — Twitter / IG-story / OG share graphics that already exist for collectors become free marketing for shops. "Trade Night Drop" stories, "New restock" feed posts, "this case had a Charizard" pulls — all generated from the same Notion data.
+- **Inventory health insights** — Price Movers shows what's appreciating in your back stock; Set Completion shows which sets you're sealed-product-heavy on; Trade Matcher (cross-store between sister shops) is a small extension of the existing logic.
+
+The product is collector-first on the demo path, but the inventory + dashboards + sharing surface is **the same tool a small card vendor would buy on day one** — no separate "vendor mode" to build, just better defaults on views and a shop-tier seat in Notion.
+
 ## How we make it easy
 
 ### Easy intake — meet collectors where they already are
@@ -141,6 +154,7 @@ The judge takeaway:
 - **Deck builder** — move from a good storage template to an assistant that can compare a decklist against your owned cards and wishlist the missing pieces.
 - **Showcase / sharing** — visual collection walls and share graphics should make collectors proud to send the Vault to friends.
 - **Marketplace links** — start with outbound links for recommended cards. Do not attempt full checkout until the recommendation layer is trusted.
+- **Vendor / shop seats** — the inventory + duplicate + sharing surface is already shop-friendly. The bet is whether to package it as a "Shop Vault" workspace template with curated default views (Inventory, Trade Block, Sell Pile, Restock Alerts) and a small set of customer-facing share graphics tuned for restock announcements.
 
 ## Open questions
 
