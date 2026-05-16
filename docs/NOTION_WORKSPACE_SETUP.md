@@ -106,6 +106,22 @@ Grand Line Vault
 - cards by set
 - duplicate count
 - recent additions
+- visual card wall
+- trophy case by market price
+
+## Visual collection views
+
+Add these linked Gallery views of **Owned Cards** to the Grand Line Vault page:
+
+| View | Layout | Filter / sort | Purpose |
+| --- | --- | --- | --- |
+| `My Collection Wall` | Gallery, card preview = Page cover, card size = Large | owner filter for the active collector | Digital binder view |
+| `Crew Wall` | Gallery, card preview = Page cover | no owner filter | Shared workspace collection |
+| `Binder by Set` | Gallery, grouped by `Set Code` | sort `Card ID` ascending | Browse like a physical binder |
+| `Trophy Case` | Gallery, card preview = Page cover | sort `Market Price` descending | Show the most valuable cards first |
+| `Duplicates` | Gallery, card preview = Page cover | `Quantity > 1` | Trade candidate surface |
+
+For each Gallery view, show only the properties that matter visually: `Card ID`, `Owner`, `Quantity`, and `Market Price`. Hide long text fields so the card image carries the page.
 
 ## Demo path
 
@@ -114,7 +130,7 @@ Grand Line Vault
 3. Ask Vault Quartermaster / Notion Agent to process the latest scan. If needed, use `processLatestScan` for one row or `processScanInboxQueue` for a batch.
 4. Ask from Slack: `what card did I just scan?`
 5. Ask from Slack: `show my OP-01 cards`, then follow up with `which is the most expensive?`
-6. Open the Owned Cards Gallery view and Set Completion Dashboard in Notion to show the source data.
+6. Open `My Collection Wall`, `Trophy Case`, and the Set Completion Dashboard in Notion to show the source data visually.
 
 ## Slack Agent instructions
 

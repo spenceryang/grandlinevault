@@ -28,6 +28,16 @@ export async function createOwnedCardPage(
 
 	const result = await notion.pages.create({
 		parent: { data_source_id: dataSourceId },
+		...(input.imageUrl
+			? {
+					cover: {
+						type: "external" as const,
+						external: {
+							url: input.imageUrl,
+						},
+					},
+				}
+			: {}),
 		properties: {
 			Name: {
 				title: [

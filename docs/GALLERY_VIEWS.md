@@ -1,8 +1,8 @@
 # Image Gallery Views
 
-Every card-bearing database in Grand Line Vault already stores an image URL or a Notion file pointer. To browse by image instead of by name, you turn on Notion's **Gallery view** on the same database — no schema or code change required.
+Every card-bearing database in Grand Line Vault stores an image URL, a Notion file pointer, or a page cover. To browse by image instead of by name, use Notion's **Gallery view** and make the card art the preview.
 
-This page is the recipe for doing it consistently across the workspace, so collectors get the same image-first browsing experience on every board.
+The highest-impact surface is **My Collection Wall**: a large-card gallery of Owned Cards that looks like a digital binder.
 
 ## Which databases support gallery view today
 
@@ -11,11 +11,38 @@ This page is the recipe for doing it consistently across the workspace, so colle
 | Card Catalog (`cardCatalog`) | `Image` (file) | `src/index.ts` | ✅ |
 | Master Set (`masterSet`) | `Image` (url) | `src/notion/master-set-database.ts` | ✅ |
 | Luffy Index ETF (`luffyIndex`) | `Image` (url) | `src/notion/luffy-index-database.ts` | ✅ |
-| Owned Cards (user-managed) | `Scan` / image field | `docs/NOTION_WORKSPACE_SETUP.md` | ✅ |
+| Owned Cards (user-managed) | Page cover + `Scan image` file field | `src/notion/write-owned-card.ts` + `docs/NOTION_WORKSPACE_SETUP.md` | ✅ |
 | Set Completion Dashboard (`setAnalytics`) | — | `src/notion/analytics-databases.ts` | ❌ summary board, no per-row image |
 | Price Snapshots (`priceSnapshots`) | — | `src/index.ts` | ❌ time-series, no per-row image |
 
-`url`-typed images (master set, Luffy index) and `file`-typed images (card catalog) both render in Notion gallery tiles — Notion picks them up automatically when you point a gallery view at that property.
+`url`-typed images (master set, Luffy index) and `file`-typed images (card catalog / owned scans) both render in Notion gallery tiles. Newly created Owned Card pages also set the card image as the **page cover**, which makes the cleanest Notion gallery preview.
+
+## Ship this first: My Collection Wall
+
+Create a linked view of **Owned Cards** on the Grand Line Vault home page:
+
+1. Type `/linked` and choose **Create linked view of database**.
+2. Select **Owned Cards**.
+3. Add a **Gallery** view named `My Collection Wall`.
+4. Open `··· → Layout`:
+   - **Card preview**: `Page cover`
+   - **Card size**: `Large`
+   - **Fit image**: on, if available in the workspace
+5. Open `··· → Properties` and show only:
+   - `Card ID`
+   - `Owner`
+   - `Quantity`
+   - `Market Price`
+6. Sort:
+   - `Market Price` descending for a trophy-wall feel, or
+   - `Created time` descending for “recently scanned.”
+7. Add quick filtered duplicates of the same view:
+   - `Spencer's Wall`: `Owner contains Spencer`
+   - `Crew Wall`: no owner filter
+   - `High Value`: `Market Price is greater than 25`
+   - `Duplicates`: `Quantity is greater than 1`
+
+This is the view to show after the Slack demo answers “what card did I just scan?”
 
 ## Recipe: add a gallery view to any of the above
 
@@ -25,7 +52,7 @@ In Notion, open the database page (`Grand Line Vault · Card Catalog`, `Master S
 2. Choose **Gallery**.
 3. Name it something clear: `Gallery`, `Card Wall`, or `Image View`.
 4. In the new view, click **`···` → Layout** and configure:
-   - **Card preview**: the `Image` property (or `Scan` on Owned Cards)
+   - **Card preview**: the `Image` property, or `Page cover` on Owned Cards
    - **Card size**: `Medium` for browsing, `Large` for showcase boards
    - **Card preview**: **Fit image** if you want the full card uncropped, **Page cover** for an edge-to-edge look
 5. Under **Properties**, hide everything except 2–4 fields you want under each tile — typically:
@@ -66,10 +93,25 @@ In Notion, open the database page (`Grand Line Vault · Card Catalog`, `Master S
 - Useful as "what do I currently hold of the Luffy index"
 
 ### Owned Cards → "My Collection Wall"
-- Card preview: `Scan` (the per-user image)
+- Card preview: `Page cover`
 - Card size: Large
-- Visible properties: `Card Name`, `Quantity`, `Pre-grade estimate`
+- Visible properties: `Card ID`, `Owner`, `Quantity`, `Market Price`
 - Best on the per-owner page in the Crew workspace
+
+### Owned Cards → "Binder by Set"
+- Card preview: `Page cover`
+- Group: `Set Code`
+- Sort: `Card ID` ascending
+- Visible properties: `Quantity`, `Rarity`, `Market Price`
+- Best for making OP-01 / OP-05 progress feel like a physical binder
+
+### Owned Cards → "Trophy Case"
+- Card preview: `Page cover`
+- Filter: `Market Price` is not empty
+- Sort: `Market Price` descending
+- Card size: Large
+- Visible properties: `Market Price`, `Owner`, `Quantity`
+- Best for the Slack follow-up: "which is the most expensive?"
 
 ## Why we don't auto-create gallery views in code
 
@@ -95,6 +137,12 @@ Create a single Notion page called **`Card Wall`** that pulls each of the galler
 
 ## Recently added to my collection
 [Linked database: Owned Cards · My Collection Wall view, sort by Acquisition Date desc, limit 24]
+
+## Trophy case
+[Linked database: Owned Cards · Trophy Case view, sort by Market Price desc]
+
+## Binder by set
+[Linked database: Owned Cards · Binder by Set view, grouped by Set Code]
 ```
 
 That gives collectors one stop for visual browsing across every gallery-enabled database. Pair it with the **Set Completion Dashboard** (which already has progress bars per the analytics PR) on the same page and you have the whole "what do I own, what's it worth, what does it look like" experience in one Notion page.
