@@ -7,7 +7,7 @@ const notion = process.env.NOTION_API_TOKEN
 const SCAN_INBOX_DATA_SOURCE_ID = process.env.SCAN_INBOX_DATA_SOURCE_ID;
 
 export type IncomingScan = {
-	submittedBy: string;
+	ownerName: string;
 	imageUrl: string;
 	contentType: string;
 	filename: string;
@@ -26,8 +26,13 @@ export async function handleIncomingScan(input: IncomingScan): Promise<void> {
 	// The existing `processScanInboxQueue` worker tool will pick it up
 	// on its next pass — recognize the card, enrich from OPTCG, and
 	// create the Owned Card record.
+	//
+	// Schema reference: docs/NOTION_WORKSPACE_SETUP.md "Scan Inbox database"
+	// Properties: Name (title), Owner (text), Front image (files), Status
+	// (select), Notes (text). The Discord message URL goes into Notes so a
+	// reviewer can hop back to the source conversation.
 	await notion.pages.create({
-		parent: { type: "data_source_id", data_source_id: SCAN_INBOX_DATA_SOURCE_ID },
+		parent: { data_source_id: SCAN_INBOX_DATA_SOURCE_ID },
 		properties: {
 			Name: {
 				title: [
@@ -36,8 +41,8 @@ export async function handleIncomingScan(input: IncomingScan): Promise<void> {
 					},
 				],
 			},
-			"Submitted By": {
-				rich_text: [{ text: { content: input.submittedBy } }],
+			Owner: {
+				rich_text: [{ text: { content: input.ownerName } }],
 			},
 			"Front image": {
 				files: [
@@ -49,9 +54,15 @@ export async function handleIncomingScan(input: IncomingScan): Promise<void> {
 				],
 			},
 			Status: { select: { name: "New" } },
-			Source: {
-				rich_text: [{ text: { content: `Discord: ${input.sourceMessageUrl}` } }],
+			Notes: {
+				rich_text: [
+					{
+						text: {
+							content: `Submitted via Discord: ${input.sourceMessageUrl}`,
+						},
+					},
+				],
 			},
 		},
-	} as Parameters<typeof notion.pages.create>[0]);
+	});
 }

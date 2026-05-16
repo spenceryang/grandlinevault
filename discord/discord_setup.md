@@ -33,7 +33,7 @@ NOTION_API_TOKEN=...            # same token used by the Worker
 SCAN_INBOX_DATA_SOURCE_ID=...   # same data-source id used by the Worker
 ```
 
-The bot reuses the **same** Notion token and Scan Inbox data source as the Worker — there's nothing Discord-specific on the Notion side. Each Discord upload becomes a Scan Inbox row with `Submitted By = "<discord-username> (Discord: <user-id>)"` and `Source = "Discord: <message-url>"`.
+The bot reuses the **same** Notion token and Scan Inbox data source as the Worker — there's nothing Discord-specific on the Notion side. Each Discord upload becomes a Scan Inbox row with `Owner = "<discord-username> (Discord: <user-id>)"`, `Front image` set to the attachment URL, `Status = New`, and `Notes = "Submitted via Discord: <message-url>"` so a reviewer can hop back to the source conversation.
 
 ## 5. Install and run
 

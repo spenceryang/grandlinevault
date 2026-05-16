@@ -42,12 +42,12 @@ client.on(Events.MessageCreate, async (message: Message) => {
 		`Queueing ${imageAttachments.size} card photo(s) to the Scan Inbox…`,
 	);
 
-	const submittedBy = `${message.author.username} (Discord: ${message.author.id})`;
+	const ownerName = `${message.author.username} (Discord: ${message.author.id})`;
 	const results: string[] = [];
 	for (const att of imageAttachments.values()) {
 		try {
 			await handleIncomingScan({
-				submittedBy,
+				ownerName,
 				imageUrl: att.url,
 				contentType: att.contentType ?? "image/jpeg",
 				filename: att.name,
