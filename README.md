@@ -83,7 +83,7 @@ The Worker provisions and populates a set of managed Notion databases that each 
 - Scan Inbox, Owned Cards, Wishlists, and Master Set databases.
 - Gallery, set-completion, owner, duplicate, wishlist, and portfolio-style views in Notion.
 - GIBL image-recognition integration for the scan path.
-- Scan Inbox upload path: upload a `Front image`, then run `processScanInboxQueue` to recognize/enrich the card and create an owned-card record. The true `processScanInboxUpload` Notion automation is coded but gated until the workspace has Worker automations enabled.
+- Scan Inbox upload path: upload a `Front image`, then run `processLatestScan` for a one-card demo or `processScanInboxQueue` for a batch to recognize/enrich the card and create an owned-card record. The true `processScanInboxUpload` Notion automation is coded but gated until the workspace has Worker automations enabled.
 - English-only recognition guardrails.
 - OPTCG API card, set, starter-deck, promo, DON!!, price, and image-fetch helpers.
 - Offline OP15-EB04 seed data for resilient demos when the live image/card API is unavailable.
@@ -140,6 +140,8 @@ flowchart LR
 - `identifyAndEnrichCard`
 - `processScanInboxPage`
 - `processScanInboxQueue`
+- `processLatestScan`
+- `whatDidIJustScan`
 - `getCardDetails`
 - `getSetCards`
 - `filterCatalogCards`

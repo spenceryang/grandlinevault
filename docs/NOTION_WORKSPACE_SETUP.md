@@ -31,7 +31,7 @@ Create these properties exactly:
 Current fallback flow:
 
 ```text
-Upload Front image → keep Status = New → ask the Agent to run processScanInboxQueue
+Upload Front image → keep Status = New → ask the Agent to run processLatestScan or processScanInboxQueue
 ```
 
 When Worker automation capabilities are enabled for the workspace, set `ENABLE_NOTION_AUTOMATIONS=1`, redeploy, and create this Notion database automation:
@@ -100,6 +100,6 @@ Grand Line Vault
 
 1. Create a Scan Inbox row.
 2. Upload a card-front image to `Front image`.
-3. Ask the Agent to run `processScanInboxQueue`.
+3. Ask the Agent to run `processLatestScan` for one row, or `processScanInboxQueue` for a batch.
 4. Open the Owned Cards Gallery view.
 5. Show portfolio charts from `Price Snapshots`.
