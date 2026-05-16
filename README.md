@@ -89,7 +89,7 @@ Every printing of every card — base, parallel, alt-art, promo — gets a row i
 Two related databases (`Decks` + `Decklist Entries`) plus a validator that checks OPTCG construction rules (1 Leader, 50 main, 10 DON!!, max 4 copies, color identity). Same rows render as a **card list** (table grouped by Slot) and as an **image gallery** in Notion — switch views, the data stays in sync.
 
 ### Image galleries
-Every card-bearing database stores an image. Owned Card pages now also set the card image as the Notion page cover, so the **My Collection Wall** Gallery view can render like a digital binder instead of a table. A short [recipe](./docs/GALLERY_VIEWS.md) sets up consistent Gallery views across Card Catalog, Master Set, Luffy Index, Decklist Entries, and Owned Cards — including `My Collection Wall`, `Binder by Set`, and `Trophy Case`.
+Every card-bearing database stores an image. Owned Card pages now also set the card image as the Notion page cover, so the **My Collection Wall** Gallery view can render like a digital binder instead of a table. A short [recipe](./docs/GALLERY_VIEWS.md) sets up consistent Gallery views across Card Catalog, Master Set, Luffy Index, Decklist Entries, and Owned Cards — including `Image-only Wall`, `My Collection Wall`, `Binder by Set`, and `Trophy Case`.
 
 ### Pre-grade estimate
 When a scan includes both front and back, `estimatePreGrade` returns a likely PSA range (8–9, 9–10, etc.) plus a confidence level based on centering / corners / edges / surface signals. Framed deliberately as **pre-grade**, never an official grade.

@@ -2,7 +2,7 @@
 
 Every card-bearing database in Grand Line Vault stores an image URL, a Notion file pointer, or a page cover. To browse by image instead of by name, use Notion's **Gallery view** and make the card art the preview.
 
-The highest-impact surface is **My Collection Wall**: a large-card gallery of Owned Cards that looks like a digital binder.
+The highest-impact surface is **Image-only Wall**: a large-card gallery of Owned Cards with only card art visible. It should feel like opening a binder, not reading a database.
 
 ## Which databases support gallery view today
 
@@ -17,22 +17,23 @@ The highest-impact surface is **My Collection Wall**: a large-card gallery of Ow
 
 `url`-typed images (master set, Luffy index) and `file`-typed images (card catalog / owned scans) both render in Notion gallery tiles. Newly created Owned Card pages also set the card image as the **page cover**, which makes the cleanest Notion gallery preview.
 
-## Ship this first: My Collection Wall
+## Ship this first: Image-only Wall
 
 Create a linked view of **Owned Cards** on the Grand Line Vault home page:
 
 1. Type `/linked` and choose **Create linked view of database**.
 2. Select **Owned Cards**.
-3. Add a **Gallery** view named `My Collection Wall`.
+3. Add a **Gallery** view named `Image-only Wall`.
 4. Open `··· → Layout`:
    - **Card preview**: `Page cover`
    - **Card size**: `Large`
    - **Fit image**: on, if available in the workspace
-5. Open `··· → Properties` and show only:
-   - `Card ID`
-   - `Owner`
-   - `Quantity`
-   - `Market Price`
+5. Open `··· → Properties` and hide every property.
+   - Hide `Card ID`
+   - Hide `Owner`
+   - Hide `Quantity`
+   - Hide `Market Price`
+   - Hide any scan metadata or long text fields
 6. Sort:
    - `Market Price` descending for a trophy-wall feel, or
    - `Created time` descending for “recently scanned.”
@@ -43,6 +44,8 @@ Create a linked view of **Owned Cards** on the Grand Line Vault home page:
    - `Duplicates`: `Quantity is greater than 1`
 
 This is the view to show after the Slack demo answers “what card did I just scan?”
+
+Notion may still show the page title on gallery cards depending on the workspace UI. If so, keep this as the cleanest native Notion version: no secondary text, no price labels, no metadata — just card covers plus the unavoidable page title.
 
 ## Recipe: add a gallery view to any of the above
 
@@ -92,11 +95,17 @@ In Notion, open the database page (`Grand Line Vault · Card Catalog`, `Master S
 - Visible properties: `Name`, `Market Price`
 - Useful as "what do I currently hold of the Luffy index"
 
+### Owned Cards → "Image-only Wall"
+- Card preview: `Page cover`
+- Card size: Large
+- Visible properties: none
+- Best as the default collection landing view; it is the digital binder wall
+
 ### Owned Cards → "My Collection Wall"
 - Card preview: `Page cover`
 - Card size: Large
 - Visible properties: `Card ID`, `Owner`, `Quantity`, `Market Price`
-- Best on the per-owner page in the Crew workspace
+- Best when you want light metadata under each card
 
 ### Owned Cards → "Binder by Set"
 - Card preview: `Page cover`
@@ -134,6 +143,9 @@ Create a single Notion page called **`Card Wall`** that pulls each of the galler
 
 ## Luffy index
 [Linked database: Luffy Index ETF · Index Holdings view]
+
+## Image-only collection wall
+[Linked database: Owned Cards · Image-only Wall view, card preview = Page cover, properties hidden]
 
 ## Recently added to my collection
 [Linked database: Owned Cards · My Collection Wall view, sort by Acquisition Date desc, limit 24]
