@@ -1,0 +1,138 @@
+# Grand Line Vault — pitch (initial thoughts)
+
+## The one-liner
+
+**Grand Line Vault turns Notion into the easiest place to own a card collection.** You snap a photo from wherever you are, the system identifies the card, fills in everything worth knowing about it, and the card shows up in your collection alongside everything else you own — searchable, browseable, financially legible, and shareable with a crew.
+
+## What we're optimizing for
+
+Collectors spend their attention in three places: **getting cards in**, **looking at what they own**, and **deciding what to do next**. Most tools nail one of those at the cost of the others. We're trying to do all three in a single Notion workspace because Notion is already where everything else in your life lives — your trip plans, your notes, your work doc.
+
+## How we make it easy
+
+### Easy intake — meet collectors where they already are
+
+There's no single "right" way to scan a card. So we don't pick one — we let the user pick.
+
+- **Notion upload** — drop a photo into the Scan Inbox database. The default.
+- **Email (Resend Inbound)** — collectors email a card photo to a configured address. The email becomes a Scan Inbox row.
+- **Discord bot** — drop a photo in a channel; the bot creates a Scan Inbox row tied to your Discord identity. Great for groups already brewing decks together.
+- **Slack** — same pattern as Discord, for crews on Slack.
+- **iMessage / Apple Shortcuts** — planned; the cheapest path reuses the email intake.
+
+Adding a new intake method is a one-screen contract: accept an image + an owner identifier, write a Scan Inbox row. Every method funnels into the same downstream pipeline. **The user picks how they want to scan; we adapt.**
+
+### Scan → recognize → enrich → store, automatically
+
+After a Scan Inbox row lands, the Worker does the boring work:
+
+1. **Recognize** the card image (GIBL recognition + English-only filter so foreign-language and low-confidence scans get queued for review rather than silently polluting the collection).
+2. **Enrich** with canonical data from the OPTCG API — name, set, rarity, color, type, cost, power, counter, attribute, art, current market price.
+3. **Store** the enriched record in the user's Owned Cards database with quantity, condition, pre-grade estimate, and scan provenance.
+
+Front-only scans work; front+back unlocks the pre-grade estimate (centering / corners / edges / surface signals → "Likely PSA 8–9 range, medium confidence"). Framed explicitly as a **pre-grade estimate**, never an official grade.
+
+### See your collection — visually
+
+Notion gives us free gallery views, board views, table views, and progress-bar rendering on percent properties. We use all of them:
+
+- **Card Wall** gallery view of every card you own
+- **Master Set Dashboard** — every printing per set, base/parallel/alt-art/promo classified, with a `Completion %` column that renders as a per-set progress bar
+- **Luffy Index ETF** + **Character Indices** (Zoro, Sanji, Strawhat crew, Yonko, Donquixote) — price-weighted index per character with `Index Weight` rendered as a bar
+- **Set Completion Dashboard** — per-set progress + total + owned market value, daily refresh
+- **Archetype Completion** — per-sub-type (Straw Hat Crew, Whitebeard Pirates, Marines, etc.) progress, the orthogonal axis to set completion
+
+Every card-bearing database has an Image property so the Gallery view "just works" — instant card-wall browsing, zero schema changes.
+
+### See what to chase next
+
+Owning cards is half the fun. The other half is figuring out what to chase.
+
+- **Related cards** — given any card, score the top-N most-related printings (same character, same set, same color, shared sub-types, similar cost, same rarity). Lives as both a managed Notion DB and an on-demand library call.
+- **Price movers** — top gainers and losers over a rolling 7-day / 30-day window, diffed from the daily `priceSnapshots` time-series. "What just spiked" without any new API calls.
+- **Trade matcher** — cross-user join: Spencer's duplicate Luffys meet Jarren's wishlist Luffys, the system suggests the trade.
+- **Server-side name search** — `filterCatalogCards({ cardName: "Zoro", color: "Red", rarity: "SR" })` returns just those 4 cards instead of pulling the 3,330-card catalog client-side. Agents and humans both use it.
+
+### Decklists, not just collections
+
+Collectors play. So the workspace doubles as a deck builder:
+
+- **Decks** database with one row per deck (Leader, Format, Status, Card Count, Estimated Value).
+- **Decklist Entries** with two-way relation to Decks. The same data renders as a **card list** (table grouped by Slot, sorted by Cost) AND as an **image gallery** (Card Wall for the deck). Switch views, the data stays in sync.
+- **OPTCG validator** — `validateOptcgDecklist` checks construction rules (1 Leader, 50 main deck, 10 DON!!, max 4 copies, color identity warnings).
+
+### Notion-native = agent-native
+
+Every dataset is a Notion database, which means the Custom Agent can answer in plain English:
+
+- "What cards am I missing from OP-05?"
+- "What's my biggest Luffy holding?"
+- "Which duplicates could I trade with Jarren?"
+- "Show me my Red SR Zoros."
+- "What just dropped 20% this week?"
+
+No separate API layer to query — the data IS the product.
+
+## Why Notion (not a web app)
+
+A Notion-native build means:
+
+- **Zero login friction** — collectors already live in Notion
+- **Free multi-user** — workspace permissions handle Owner separation; each crew member sees only their own owned cards but shares the same canonical catalog
+- **Free dashboards** — gallery, board, calendar, chart views are built in
+- **Free LLM surface** — Notion's Custom Agents are already wired into the same data
+- **Portable** — every database can be exported, duplicated, embedded
+
+The Worker is the brain; Notion is the body.
+
+## What's shipped (as of this writing)
+
+- Recognition + enrichment pipeline (GIBL + OPTCG)
+- Owned Cards, Wishlists, Scan Inbox, Card Catalog, Price Snapshots, Master Set, Set Completion Dashboard
+- Luffy Index ETF + Character Indices (Zoro, Sanji, Strawhat, Yonko, Donquixote)
+- Decklist template (card list + image gallery views, OPTCG validator)
+- Related Cards scoring engine + Notion board
+- Price Movers engine + Notion board
+- Trade Matcher engine + Notion board
+- Archetype Completion engine + Notion board
+- Server-side `cardName` search wired through every catalog/starter/promo filter
+- Offline OP15-EB04 seed for demo resilience
+- Resend Inbound parser + signature verification (email-as-intake)
+- Resend Outbound templates (scan receipts, trade matches, promos)
+- Discord bot (draft) + Slack intake
+- PSA provider scaffolds (cert verification, population, auction prices, price guide, card facts, OAuth)
+- TCGdex provider library (Pokémon TCG, isolated namespace)
+- PriceCharting provider library (graded prices)
+
+## What we're going for in the demo
+
+Show the **first 30 seconds** are magical:
+1. Photo lands (any intake)
+2. Card appears in the gallery
+3. Open the card page — full enriched record, image, market price, set membership, related cards
+4. Ask the Agent: "what am I missing from OP-05?" — answer with a count + a missing-cards gallery
+5. Open the Set Completion Dashboard — see the progress bar tick up
+
+The judge takeaway:
+
+> **Notion isn't just storing this collection. It IS the product.**
+
+## What we're explicitly not chasing (yet)
+
+- Full marketplace checkout (P2 — start as outbound marketplace links)
+- Official PSA grading replacement (we frame everything as **pre-grade** estimates)
+- Japanese / Chinese / multilingual card support (English-only for P0)
+- Mobile app outside Notion (the mobile path is "Apple Shortcut emails the image, Resend Inbound picks it up")
+- Deck simulator
+- High-frequency intraday trading dashboard
+
+## Open questions
+
+1. Best one demo card to highlight in the live walkthrough? (Current bias: OP05-119 Luffy Manga — visually iconic + on the gainer board)
+2. How much of the multi-game expansion (Pokémon TCGdex, future Magic / Lorcana) do we show in the pitch vs. keep as "the rails are there if you want them later"?
+3. Pre-grade estimate UI — show the example output inline, or keep it as a "look how this also works" beat?
+4. Do we walk through the trade matcher live (requires a multi-user state in the demo workspace) or just describe it?
+
+---
+
+_This document is initial thoughts. Spencer to review and shape the formal pitch._
