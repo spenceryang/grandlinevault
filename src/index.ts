@@ -17,13 +17,15 @@ import {
 } from "./notion/master-set-database.js";
 import { fetchOwnedCards } from "./notion/read-owned-cards.js";
 import {
+	processLatestScan,
 	processScanInboxPage,
 	processScanInboxQueue,
+	whatDidIJustScan,
 } from "./notion/process-scan-inbox.js";
 import { createOwnedCardPage } from "./notion/write-owned-card.js";
 import { listAllOptcgDonCards } from "./providers/optcgapi/don-cards.js";
 import { filterOptcgCards } from "./providers/optcgapi/filter-cards.js";
-import { getOptcgCard } from "./providers/optcgapi/get-card.js";
+import { resolveOptcgCardDetails } from "./providers/optcgapi/resolve-card.js";
 import { getOptcgSet } from "./providers/optcgapi/get-set.js";
 import {
 	groupCardsBySet,
@@ -484,6 +486,27 @@ worker.tool("processScanInboxQueue", {
 	},
 });
 
+worker.tool("processLatestScan", {
+	title: "Process Latest Scan",
+	description:
+		"Process the most recently edited Scan Inbox row with Status = New. Use this for a one-card demo.",
+	schema: j.object({}),
+	execute: async (_input, context) => {
+		return processLatestScan(context.notion);
+	},
+});
+
+worker.tool("whatDidIJustScan", {
+	title: "What Did I Just Scan?",
+	description:
+		"Return the latest matched Scan Inbox result with status, recognition summary, confidence, and linked owned-card URL.",
+	schema: j.object({}),
+	hints: { readOnlyHint: true },
+	execute: async (_input, context) => {
+		return whatDidIJustScan(context.notion);
+	},
+});
+
 worker.tool("identifyAndEnrichCard", {
 	title: "Identify and Enrich One Piece Card",
 	description:
@@ -498,7 +521,7 @@ worker.tool("identifyAndEnrichCard", {
 			return { recognition, variants: [] };
 		}
 
-		const variants = await getOptcgCard(recognition.candidate.cardId);
+		const variants = await resolveOptcgCardDetails(recognition.candidate.cardId);
 		return { recognition, variants };
 	},
 });
@@ -512,7 +535,7 @@ worker.tool("getCardDetails", {
 	}),
 	hints: { readOnlyHint: true },
 	execute: async ({ cardId }) => {
-		return { cardId, variants: await getOptcgCard(cardId) };
+		return { cardId, variants: await resolveOptcgCardDetails(cardId) };
 	},
 });
 
@@ -532,17 +555,19 @@ worker.tool("getSetCards", {
 worker.tool("filterCatalogCards", {
 	title: "Filter Catalog Cards",
 	description:
-		"Search OPTCG cards by color, type, cost, and rarity. Use this for queries like showing SR cards or red leaders.",
+		"Search OPTCG cards by name, color, type, cost, and rarity. Use this for queries like 'all SR Red Zoros' or 'red leaders'. cardName is a server-side substring match.",
 	schema: j.object({
+		cardName: j.string().nullable(),
 		color: j.string().nullable(),
 		cardType: j.string().nullable(),
 		cost: j.string().nullable(),
 		rarity: j.string().nullable(),
 	}),
 	hints: { readOnlyHint: true },
-	execute: async ({ color, cardType, cost, rarity }) => {
+	execute: async ({ cardName, color, cardType, cost, rarity }) => {
 		return {
 			cards: await filterOptcgCards({
+				cardName: cardName ?? undefined,
 				color: color ?? undefined,
 				cardType: cardType ?? undefined,
 				cost: cost ?? undefined,
@@ -738,17 +763,19 @@ worker.tool("getStarterCardDetails", {
 worker.tool("filterStarterCards", {
 	title: "Filter Starter Deck Cards",
 	description:
-		"Filter starter-deck cards by color, type, cost, or rarity. Provide at least one filter.",
+		"Filter starter-deck cards by name, color, type, cost, or rarity. Provide at least one filter. cardName is a server-side substring match.",
 	schema: j.object({
+		cardName: j.string().nullable(),
 		color: j.string().nullable(),
 		cardType: j.string().nullable(),
 		cost: j.string().nullable(),
 		rarity: j.string().nullable(),
 	}),
 	hints: { readOnlyHint: true },
-	execute: async ({ color, cardType, cost, rarity }) => {
+	execute: async ({ cardName, color, cardType, cost, rarity }) => {
 		return {
 			cards: await filterOptcgStarterCards({
+				cardName: cardName ?? undefined,
 				color: color ?? undefined,
 				cardType: cardType ?? undefined,
 				cost: cost ?? undefined,
@@ -788,17 +815,19 @@ worker.tool("getPromoCardDetails", {
 worker.tool("filterPromoCards", {
 	title: "Filter Promo Cards",
 	description:
-		"Filter One Piece TCG promo cards by color, type, cost, or rarity. Provide at least one filter.",
+		"Filter One Piece TCG promo cards by name, color, type, cost, or rarity. Provide at least one filter. cardName is a server-side substring match.",
 	schema: j.object({
+		cardName: j.string().nullable(),
 		color: j.string().nullable(),
 		cardType: j.string().nullable(),
 		cost: j.string().nullable(),
 		rarity: j.string().nullable(),
 	}),
 	hints: { readOnlyHint: true },
-	execute: async ({ color, cardType, cost, rarity }) => {
+	execute: async ({ cardName, color, cardType, cost, rarity }) => {
 		return {
 			cards: await filterOptcgPromoCards({
+				cardName: cardName ?? undefined,
 				color: color ?? undefined,
 				cardType: cardType ?? undefined,
 				cost: cost ?? undefined,

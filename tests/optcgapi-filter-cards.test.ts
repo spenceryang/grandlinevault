@@ -79,6 +79,40 @@ test("filterOptcgCards rejects when no filters are provided", async () => {
 	);
 });
 
+test("filterOptcgCards passes cardName through to the server", async () => {
+	const originalFetch = globalThis.fetch;
+	let capturedUrl = "";
+	globalThis.fetch = (async (input: string | URL | Request) => {
+		capturedUrl = String(input);
+		return new Response(JSON.stringify([sampleRaw]), {
+			status: 200,
+			headers: { "content-type": "application/json" },
+		});
+	}) as typeof fetch;
+	try {
+		await filterOptcgCards({ cardName: "Zoro", color: "Red" });
+		assert.match(capturedUrl, /card_name=Zoro/);
+		assert.match(capturedUrl, /color=Red/);
+	} finally {
+		globalThis.fetch = originalFetch;
+	}
+});
+
+test("filterOptcgCards accepts cardName as the only filter", async () => {
+	const originalFetch = globalThis.fetch;
+	globalThis.fetch = (async () =>
+		new Response(JSON.stringify([sampleRaw]), {
+			status: 200,
+			headers: { "content-type": "application/json" },
+		})) as typeof fetch;
+	try {
+		const cards = await filterOptcgCards({ cardName: "Luffy" });
+		assert.equal(cards.length, 1);
+	} finally {
+		globalThis.fetch = originalFetch;
+	}
+});
+
 test("filterOptcgCards throws on API error envelope", async () => {
 	const originalFetch = globalThis.fetch;
 	globalThis.fetch = (async () =>
