@@ -8,6 +8,25 @@ scan → recognize English card → enrich from OPTCG API → save owned copy �
 
 Live workspace: [Grand Line Vault in Notion](https://www.notion.so/Grand-Line-Vault-3627be9e126e81bb83ced51cef2628b0)
 
+## Scope
+
+Grand Line Vault is scoped as a **One Piece TCG-first collector workspace** for the Notion hackathon. The demo path stays focused on English One Piece cards:
+
+```text
+Scan Inbox image upload → Agent processes scan → OPTCG enrichment → Owned Cards gallery → set completion / portfolio / recommendations
+```
+
+The repository now also contains provider libraries for adjacent expansion tracks. These are intentionally secondary:
+
+| Track | Status | Role in the project |
+|---|---|---|
+| **One Piece TCG / OPTCG** | Core shipped path | Main hackathon demo, Notion databases, scan ingestion, collection management, completion, decks, Luffy Index, related-card recommendations |
+| **PriceCharting** | Library merged, not wired into Worker tools yet | Future graded/raw pricing enrichment; requires a paid PriceCharting token and strict 1 request/sec pacing |
+| **Pokémon / TCGdex** | Library merged, not wired into Notion workspace yet | Future multi-game vault expansion; isolated under `src/providers/tcgdex/` so it does not pollute the One Piece data model |
+| **PSA verification** | Future / PR track | Potential certification lookup and graded-card verification; not part of the current demo loop |
+
+For judging, present the project as **a Notion-native One Piece card vault with optional provider rails for broader TCG coverage later**.
+
 ## Features
 
 ### Scan and recognize
@@ -40,11 +59,11 @@ Every card-bearing database stores an image. A short [recipe](./docs/GALLERY_VIE
 ### Pre-grade estimate
 When a scan includes both front and back, `estimatePreGrade` returns a likely PSA range (8–9, 9–10, etc.) plus a confidence level based on centering / corners / edges / surface signals. Framed deliberately as **pre-grade**, never an official grade.
 
-### Multi-provider price intelligence (in review)
-PriceCharting integration (PRs #18 / #19) adds graded-card market prices (BGS 10, CGC 10, SGC 10) that OPTCG doesn't publish — useful for comparing "raw vs graded" outcomes on the same card.
+### Multi-provider price intelligence
+PriceCharting provider libraries add graded-card market prices (BGS 10, CGC 10, SGC 10) that OPTCG does not publish — useful for comparing "raw vs graded" outcomes on the same card. This is merged as a provider layer only; it is not wired into live Worker tools until a paid PriceCharting token is available.
 
-### Pokemon TCG via TCGdex (in review)
-A separate, namespaced section (PRs #13–#16) wraps the open [TCGdex](https://tcgdex.dev/) API for Pokemon cards, sets, series, and reference metadata. Kept strictly isolated from One Piece code so the workspace can evolve into a multi-game vault without mixing data models.
+### Pokémon TCG via TCGdex
+A separate, namespaced provider section wraps the open [TCGdex](https://tcgdex.dev/) API for Pokémon cards, sets, series, and reference metadata. This is merged as future multi-game infrastructure, isolated from the One Piece code path and Notion data model.
 
 ## Templates
 
@@ -189,6 +208,7 @@ PRICE_FEED_URL=
 OPTCG_SET_IDS=OP-01,OP-02,OP-03,OP-04,OP-05,OP-06,OP-07,EB-01,OP-08,OP-09,OP-10,OP-11,EB-02,OP-12,PRB-01,PRB-02,OP-13,OP14-EB04,EB-03,OP15-EB04
 RECOGNITION_CONFIDENCE_THRESHOLD=0.82
 ENABLE_NOTION_AUTOMATIONS=0
+PRICECHARTING_API_TOKEN=
 ```
 
 6. Create/share the Notion databases from [the setup guide](./docs/NOTION_WORKSPACE_SETUP.md).
@@ -225,4 +245,4 @@ CHANGELOG.md                  Release notes
 - Automated grading is a **pre-grade estimate**, not an official PSA grade.
 - English-only matching is deliberate for the P0 collection loop.
 - Generic catalog/price feeds remain available, but the live One Piece path uses OPTCG API plus GIBL.
-- Pokémon TCGdex work and PriceCharting integration are in review PRs and should not be auto-merged without an explicit product decision.
+- PriceCharting and Pokémon TCGdex providers are merged expansion rails, but the live Notion demo remains One Piece-first unless those providers are explicitly wired into Worker tools and Notion databases.

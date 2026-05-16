@@ -12,6 +12,17 @@ Grand Line Vault uses two kinds of databases:
 
 The Worker-managed databases are created by deployment. The user-created databases should live in the actual workspace that collectors use day to day.
 
+## Project scope in Notion
+
+For the hackathon workspace, keep the visible user journey One Piece-first:
+
+```text
+Scan Inbox → Owned Cards → Collection Gallery → Set Completion → Recommendations / Decks / Luffy Index
+```
+
+PriceCharting, PSA verification, and Pokémon/TCGdex are extension tracks. They can be mentioned in an Admin or Roadmap section, but they should not distract from the main One Piece collection loop unless their Worker tools and Notion databases are explicitly wired.
+
+
 ## Scan Inbox database
 
 Create these properties exactly:
