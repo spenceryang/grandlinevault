@@ -18,6 +18,7 @@ export const config = {
 	recognitionConfidenceThreshold: Number(
 		process.env.RECOGNITION_CONFIDENCE_THRESHOLD ?? "0.82",
 	),
+	psaAuthorizationToken: process.env.PSA_AUTHORIZATION_TOKEN,
 };
 
 export function requireEnv(value: string | undefined, name: string): string {

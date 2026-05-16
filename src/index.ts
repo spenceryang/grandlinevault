@@ -50,6 +50,10 @@ import {
 import { fetchEnglishCatalogPage } from "./providers/catalog.js";
 import { fetchPriceSnapshots } from "./providers/pricing.js";
 import {
+	getPsaCertImages,
+	verifyPsaCert,
+} from "./providers/psa/cert-verification.js";
+import {
 	classifyRecognition,
 	recognizeCardFromImageUrl,
 } from "./providers/recognition.js";
@@ -845,5 +849,28 @@ worker.tool("listDonCards", {
 	hints: { readOnlyHint: true },
 	execute: async () => {
 		return { cards: await listAllOptcgDonCards() };
+	},
+});
+
+worker.tool("verifyPsaCert", {
+	title: "Verify PSA Cert",
+	description:
+		"Look up the PSA grading details for a certificate number (year, brand, subject, grade, population). Requires PSA_AUTHORIZATION_TOKEN in env.",
+	schema: j.object({
+		certNumber: j.string(),
+		includeImages: j.boolean().nullable(),
+	}),
+	hints: { readOnlyHint: true },
+	execute: async ({ certNumber, includeImages }) => {
+		const token = requireEnv(
+			config.psaAuthorizationToken,
+			"PSA_AUTHORIZATION_TOKEN",
+		);
+		const cert = await verifyPsaCert(certNumber, token);
+		if (!includeImages) {
+			return { cert, images: [] };
+		}
+		const images = await getPsaCertImages(certNumber, token);
+		return { cert, images };
 	},
 });
