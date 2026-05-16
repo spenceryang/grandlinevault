@@ -7,8 +7,20 @@ import {
 	findDuplicates,
 	summarizeOwnedCards,
 } from "./lib/collection.js";
+import {
+	buildMasterSetEntries,
+	summarizeMasterSetCompletion,
+} from "./lib/master-set.js";
+import {
+	MASTER_SET_DATABASE_KEY,
+	masterSetDatabaseConfig,
+} from "./notion/master-set-database.js";
 import { fetchOwnedCards } from "./notion/read-owned-cards.js";
 import { createOwnedCardPage } from "./notion/write-owned-card.js";
+import { filterOptcgCards } from "./providers/optcgapi/filter-cards.js";
+import { getOptcgCard } from "./providers/optcgapi/get-card.js";
+import { getOptcgSet } from "./providers/optcgapi/get-set.js";
+import { listAllOptcgSets } from "./providers/optcgapi/list-all-sets.js";
 import { fetchEnglishCatalogPage } from "./providers/catalog.js";
 import { fetchPriceSnapshots } from "./providers/pricing.js";
 import {
@@ -61,6 +73,11 @@ const priceSnapshots = worker.database("priceSnapshots", {
 		},
 	},
 });
+
+const masterSet = worker.database(
+	MASTER_SET_DATABASE_KEY,
+	masterSetDatabaseConfig,
+);
 
 const externalApiPacer = worker.pacer("externalApis", {
 	allowedRequests: 10,
@@ -147,6 +164,167 @@ worker.sync("syncPriceSnapshots", {
 	},
 });
 
+worker.sync("syncOptcgCardCatalog", {
+	database: cardCatalog,
+	mode: "incremental",
+	schedule: "manual",
+	execute: async (state?: { setIndex: number }) => {
+		const setIndex = state?.setIndex ?? 0;
+		const setId = config.optcgSetIds[setIndex];
+		if (!setId) {
+			return { changes: [], hasMore: false };
+		}
+
+		await externalApiPacer.wait();
+		const cards = await getOptcgSet(setId);
+
+		return {
+			changes: cards.map((card) => ({
+				type: "upsert" as const,
+				key: card.cardImageId,
+				properties: {
+					Name: Builder.title(card.name),
+					"Card ID": Builder.richText(card.cardImageId),
+					"Set Code": Builder.richText(card.setId ?? setId),
+					"Set Name": Builder.richText(card.setName ?? ""),
+					Variant: Builder.richText(
+						card.cardImageId === card.cardSetId
+							? "Standard"
+							: card.cardImageId.replace(card.cardSetId, "") || "Variant",
+					),
+					Rarity: Builder.richText(card.rarity ?? ""),
+					Color: Builder.richText(card.color ?? ""),
+					"Card Type": Builder.richText(card.cardType ?? ""),
+					Cost: Builder.number(card.cost ?? Number.NaN),
+					Power: Builder.number(card.power ?? Number.NaN),
+					Counter: Builder.number(card.counter ?? Number.NaN),
+					Effect: Builder.richText(card.text ?? ""),
+					Image: Builder.file(card.imageUrl, card.name),
+					"Source URL": Builder.url(
+						`https://optcgapi.com/api/sets/card/${card.cardSetId}/`,
+					),
+					English: Builder.checkbox(true),
+				},
+				upstreamUpdatedAt: card.dateScraped,
+				pageContentMarkdown: [
+					`# ${card.name}`,
+					`**Card ID:** ${card.cardImageId}`,
+					`**Base ID:** ${card.cardSetId}`,
+					`**Set:** ${card.setName ?? ""} (${card.setId ?? setId})`,
+					`**Rarity:** ${card.rarity ?? ""}`,
+					`**Market price:** ${formatUsd(card.marketPrice)}`,
+					card.text ? `\n${card.text}` : "",
+				].join("\n"),
+			})),
+			hasMore: setIndex < config.optcgSetIds.length - 1,
+			nextState:
+				setIndex < config.optcgSetIds.length - 1
+					? { setIndex: setIndex + 1 }
+					: undefined,
+		};
+	},
+});
+
+worker.sync("syncOptcgPriceSnapshots", {
+	database: priceSnapshots,
+	mode: "incremental",
+	schedule: "1d",
+	execute: async (state?: { setIndex: number }) => {
+		const setIndex = state?.setIndex ?? 0;
+		const setId = config.optcgSetIds[setIndex];
+		if (!setId) {
+			return { changes: [], hasMore: false };
+		}
+
+		await externalApiPacer.wait();
+		const cards = await getOptcgSet(setId);
+		const capturedAt = new Date().toISOString();
+
+		return {
+			changes: cards
+				.filter((card) => typeof card.marketPrice === "number")
+				.map((card) => {
+					const snapshotId = `${card.cardImageId}:${capturedAt}`;
+					return {
+						type: "upsert" as const,
+						key: snapshotId,
+						properties: {
+							Name: Builder.title(`${card.cardImageId} · ${capturedAt}`),
+							"Snapshot ID": Builder.richText(snapshotId),
+							"Card ID": Builder.richText(card.cardImageId),
+							"Market Price": Builder.number(card.marketPrice ?? Number.NaN),
+							"Low Price": Builder.number(
+								card.inventoryPrice ?? card.marketPrice ?? Number.NaN,
+							),
+							Currency: Builder.richText("USD"),
+							Source: Builder.richText("OPTCG API"),
+							"Captured At": Builder.date(capturedAt.slice(0, 10)),
+						},
+					};
+				}),
+			hasMore: setIndex < config.optcgSetIds.length - 1,
+			nextState:
+				setIndex < config.optcgSetIds.length - 1
+					? { setIndex: setIndex + 1 }
+					: undefined,
+		};
+	},
+});
+
+worker.sync("syncOptcgMasterSet", {
+	database: masterSet,
+	mode: "incremental",
+	schedule: "manual",
+	execute: async (state?: { setIndex: number }) => {
+		const setIndex = state?.setIndex ?? 0;
+		const setId = config.optcgSetIds[setIndex];
+		if (!setId) {
+			return { changes: [], hasMore: false };
+		}
+
+		await externalApiPacer.wait();
+		const cards = await getOptcgSet(setId);
+		const entries = buildMasterSetEntries(
+			cards.map((card) => ({
+				card_set_id: card.cardSetId,
+				card_image_id: card.cardImageId,
+				card_name: card.name,
+				set_id: card.setId,
+				set_name: card.setName,
+				rarity: card.rarity,
+				card_color: card.color,
+				card_type: card.cardType,
+				card_image: card.imageUrl,
+			})),
+		);
+
+		return {
+			changes: entries.map((entry) => ({
+				type: "upsert" as const,
+				key: entry.variantId,
+				properties: {
+					Name: Builder.title(entry.name),
+					"Variant ID": Builder.richText(entry.variantId),
+					"Base Card ID": Builder.richText(entry.baseCardId),
+					"Set ID": Builder.richText(entry.setId ?? setId),
+					"Set Name": Builder.richText(entry.setName ?? ""),
+					Variant: Builder.select(entry.variant),
+					Rarity: Builder.richText(entry.rarity ?? ""),
+					Color: Builder.richText(entry.color ?? ""),
+					"Card Type": Builder.richText(entry.cardType ?? ""),
+					Image: Builder.url(entry.imageUrl),
+					Owned: Builder.checkbox(false),
+				},
+			})),
+			hasMore: setIndex < config.optcgSetIds.length - 1,
+			nextState:
+				setIndex < config.optcgSetIds.length - 1
+					? { setIndex: setIndex + 1 }
+					: undefined,
+		};
+	},
+});
+
 worker.tool("identifyCard", {
 	title: "Identify One Piece Card",
 	description:
@@ -156,6 +334,122 @@ worker.tool("identifyCard", {
 	}),
 	hints: { readOnlyHint: true },
 	execute: async ({ imageUrl }) => recognizeCardFromImageUrl(imageUrl),
+});
+
+worker.tool("identifyAndEnrichCard", {
+	title: "Identify and Enrich One Piece Card",
+	description:
+		"Recognize an uploaded English card image, then fetch canonical OPTCG details and price data for the matched card.",
+	schema: j.object({
+		imageUrl: j.string().describe("Publicly accessible image URL for the scan."),
+	}),
+	hints: { readOnlyHint: true },
+	execute: async ({ imageUrl }) => {
+		const recognition = await recognizeCardFromImageUrl(imageUrl);
+		if (recognition.status !== "matched") {
+			return { recognition, variants: [] };
+		}
+
+		const variants = await getOptcgCard(recognition.candidate.cardId);
+		return { recognition, variants };
+	},
+});
+
+worker.tool("getCardDetails", {
+	title: "Get Card Details",
+	description:
+		"Fetch canonical OPTCG details, variants, images, and market prices for a card ID like OP05-119.",
+	schema: j.object({
+		cardId: j.string(),
+	}),
+	hints: { readOnlyHint: true },
+	execute: async ({ cardId }) => {
+		return { cardId, variants: await getOptcgCard(cardId) };
+	},
+});
+
+worker.tool("getSetCards", {
+	title: "Get Set Cards",
+	description:
+		"Fetch cards from an OPTCG set like OP-05, including rarity, color, type, images, and market prices.",
+	schema: j.object({
+		setId: j.string(),
+	}),
+	hints: { readOnlyHint: true },
+	execute: async ({ setId }) => {
+		return { setId, cards: await getOptcgSet(setId) };
+	},
+});
+
+worker.tool("filterCatalogCards", {
+	title: "Filter Catalog Cards",
+	description:
+		"Search OPTCG cards by color, type, cost, and rarity. Use this for queries like showing SR cards or red leaders.",
+	schema: j.object({
+		color: j.string().nullable(),
+		cardType: j.string().nullable(),
+		cost: j.string().nullable(),
+		rarity: j.string().nullable(),
+	}),
+	hints: { readOnlyHint: true },
+	execute: async ({ color, cardType, cost, rarity }) => {
+		return {
+			cards: await filterOptcgCards({
+				color: color ?? undefined,
+				cardType: cardType ?? undefined,
+				cost: cost ?? undefined,
+				rarity: rarity ?? undefined,
+			}),
+		};
+	},
+});
+
+worker.tool("listAllSets", {
+	title: "List All Sets",
+	description: "List all available One Piece TCG sets from OPTCG API.",
+	schema: j.object({}),
+	hints: { readOnlyHint: true },
+	execute: async () => {
+		return { sets: await listAllOptcgSets() };
+	},
+});
+
+worker.tool("summarizeMasterSet", {
+	title: "Summarize Master Set Completion",
+	description:
+		"Summarize base and parallel completion for a set from OPTCG API using owned card IDs.",
+	schema: j.object({
+		setId: j.string(),
+		ownedCardIds: j.array(j.string()),
+	}),
+	hints: { readOnlyHint: true },
+	execute: async ({ setId, ownedCardIds }) => {
+		const cards = await getOptcgSet(setId);
+		const owned = new Set(ownedCardIds.map((id) => id.trim().toUpperCase()));
+		const entries = buildMasterSetEntries(
+			cards.map((card) => ({
+				card_set_id: card.cardSetId,
+				card_image_id: card.cardImageId,
+				card_name: card.name,
+				set_id: card.setId,
+				set_name: card.setName,
+				rarity: card.rarity,
+				card_color: card.color,
+				card_type: card.cardType,
+				card_image: card.imageUrl,
+			})),
+		).map((entry) => ({
+			...entry,
+			owned: owned.has(entry.variantId.toUpperCase()) ||
+				owned.has(entry.baseCardId.toUpperCase()),
+		}));
+
+		return {
+			setId,
+			summary: summarizeMasterSetCompletion(entries),
+			entries,
+		};
+	},
 });
 
 worker.tool("classifyRecognitionCandidates", {
@@ -202,6 +496,12 @@ worker.tool("addOwnedCard", {
 		condition: j.string().nullable(),
 		preGradeEstimate: j.string().nullable(),
 		imageUrl: j.string().nullable(),
+		setCode: j.string().nullable(),
+		setName: j.string().nullable(),
+		rarity: j.string().nullable(),
+		color: j.string().nullable(),
+		cardType: j.string().nullable(),
+		marketPrice: j.number().nullable(),
 	}),
 	execute: async (input, context) =>
 		createOwnedCardPage(context.notion, {
@@ -223,6 +523,10 @@ worker.tool("summarizeCollection", {
 		return summarizeOwnedCards(ownerName, cards);
 	},
 });
+
+function formatUsd(value: number | null): string {
+	return typeof value === "number" ? `$${value.toFixed(2)}` : "Unknown";
+}
 
 worker.tool("listDuplicateCards", {
 	title: "List Duplicate Cards",

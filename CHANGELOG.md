@@ -1,5 +1,43 @@
 # Changelog
 
+## v0.2.0 — OPTCG API integration
+
+Grand Line Vault now has live OPTCG API hooks merged from the API PRs and exposed through the deployed Notion Worker.
+
+### Included
+
+- OPTCG API card lookup by card ID
+- OPTCG API set lookup by set ID
+- OPTCG API card filtering by color, type, cost, and rarity
+- OPTCG API all-sets listing
+- master-set variant classification and completion summary
+- OPTCG-backed Card Catalog sync
+- OPTCG-backed Price Snapshot sync
+- OPTCG-backed Master Set sync
+- Agent tools:
+  - `identifyAndEnrichCard`
+  - `getCardDetails`
+  - `getSetCards`
+  - `filterCatalogCards`
+  - `listAllSets`
+  - `summarizeMasterSet`
+
+### Live validation
+
+- `getCardDetails` successfully returned OP01-001 variants, images, rarity, type, and market prices.
+- `listAllSets` successfully returned the live OPTCG set list.
+- Local validation passed with 35 tests, typecheck, and build.
+
+### Notion updates
+
+- Owned Cards now supports API-enriched properties:
+  - Set Code
+  - Set Name
+  - Rarity
+  - Color
+  - Card Type
+  - Market Price
+
 ## v0.1.0 — Live scaffold release
 
 Grand Line Vault now has a public repo, a deployed Notion Worker, and a live Notion workspace scaffold.

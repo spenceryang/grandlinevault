@@ -73,10 +73,19 @@ npm run build
 
 - `syncCardCatalog`
 - `syncPriceSnapshots`
+- `syncOptcgCardCatalog`
+- `syncOptcgPriceSnapshots`
+- `syncOptcgMasterSet`
 
 ### Tools
 
 - `identifyCard`
+- `identifyAndEnrichCard`
+- `getCardDetails`
+- `getSetCards`
+- `filterCatalogCards`
+- `listAllSets`
+- `summarizeMasterSet`
 - `classifyRecognitionCandidates`
 - `addOwnedCard`
 - `summarizeCollection`

@@ -9,6 +9,12 @@ type AddOwnedCardInput = {
 	condition: string | null;
 	preGradeEstimate: string | null;
 	imageUrl: string | null;
+	setCode: string | null;
+	setName: string | null;
+	rarity: string | null;
+	color: string | null;
+	cardType: string | null;
+	marketPrice: number | null;
 };
 
 export async function createOwnedCardPage(
@@ -87,8 +93,30 @@ export async function createOwnedCardPage(
 						],
 					}
 				: { files: [] },
+			"Set Code": textProperty(input.setCode),
+			"Set Name": textProperty(input.setName),
+			Rarity: textProperty(input.rarity),
+			Color: textProperty(input.color),
+			"Card Type": textProperty(input.cardType),
+			"Market Price": {
+				number: input.marketPrice,
+			},
 		},
 	});
 
 	return { pageId: result.id };
+}
+
+function textProperty(value: string | null) {
+	return value
+		? {
+				rich_text: [
+					{
+						text: {
+							content: value,
+						},
+					},
+				],
+			}
+		: { rich_text: [] };
 }
