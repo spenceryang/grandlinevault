@@ -94,6 +94,9 @@ Every card-bearing database stores an image. Owned Card pages now also set the c
 ### Pre-grade estimate
 When a scan includes both front and back, `estimatePreGrade` returns a likely PSA range (8–9, 9–10, etc.) plus a confidence level based on centering / corners / edges / surface signals. Framed deliberately as **pre-grade**, never an official grade.
 
+### Share collection graphic
+Generates a 1200×630 shareable image (Twitter/OG card sized) that shows the collector's Vault at a glance — public Notion link, total card count, portfolio value, and 4–6 favorite cards as a tile strip. Pure SVG, zero dependencies, brandable with custom colors. Drop the SVG into a Notion image block, an iMessage thread, a Discord channel, or rasterize to PNG with `@resvg/resvg-js` for chat clients that prefer it. See [`docs/SHARE_COLLECTION_GRAPHIC.md`](./docs/SHARE_COLLECTION_GRAPHIC.md).
+
 ### Multi-provider price intelligence
 PriceCharting provider libraries add graded-card market prices (BGS 10, CGC 10, SGC 10) that OPTCG does not publish — useful for comparing "raw vs graded" outcomes on the same card. This is merged as a provider layer only; it is not wired into live Worker tools until a paid PriceCharting token is available.
 
