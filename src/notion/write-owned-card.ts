@@ -20,7 +20,7 @@ type AddOwnedCardInput = {
 export async function createOwnedCardPage(
 	notion: Client,
 	input: AddOwnedCardInput,
-): Promise<{ pageId: string }> {
+): Promise<{ pageId: string; url?: string }> {
 	const dataSourceId = requireEnv(
 		config.ownedCardsDataSourceId,
 		"OWNED_CARDS_DATA_SOURCE_ID",
@@ -104,7 +104,10 @@ export async function createOwnedCardPage(
 		},
 	});
 
-	return { pageId: result.id };
+	return {
+		pageId: result.id,
+		url: "url" in result ? result.url : undefined,
+	};
 }
 
 function textProperty(value: string | null) {

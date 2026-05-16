@@ -16,6 +16,10 @@ import {
 	masterSetDatabaseConfig,
 } from "./notion/master-set-database.js";
 import { fetchOwnedCards } from "./notion/read-owned-cards.js";
+import {
+	processScanInboxPage,
+	processScanInboxQueue,
+} from "./notion/process-scan-inbox.js";
 import { createOwnedCardPage } from "./notion/write-owned-card.js";
 import { listAllOptcgDonCards } from "./providers/optcgapi/don-cards.js";
 import { filterOptcgCards } from "./providers/optcgapi/filter-cards.js";
@@ -404,6 +408,49 @@ worker.tool("identifyCard", {
 	}),
 	hints: { readOnlyHint: true },
 	execute: async ({ imageUrl }) => recognizeCardFromImageUrl(imageUrl),
+});
+
+if (process.env.ENABLE_NOTION_AUTOMATIONS === "1") {
+	worker.automation("processScanInboxUpload", {
+		title: "Process Scan Inbox Upload",
+		description:
+			"Runs when a Scan Inbox row gets a Front image upload, recognizes the English One Piece card, enriches it, creates an owned-card record, and writes the result back to the row.",
+		execute: async (event, context) => {
+			if (!event.pageData) {
+				throw new Error("This automation must be triggered from a Notion page.");
+			}
+
+			await processScanInboxPage(context.notion, event.pageData);
+		},
+	});
+}
+
+worker.tool("processScanInboxPage", {
+	title: "Process Scan Inbox Page",
+	description:
+		"Manually process one Scan Inbox page by page ID. Use this as a fallback when testing the upload automation.",
+	schema: j.object({
+		pageId: j.string(),
+	}),
+	execute: async ({ pageId }, context) => {
+		const page = await context.notion.pages.retrieve({ page_id: pageId });
+		if (!("properties" in page)) {
+			throw new Error("The provided page ID is not a database page.");
+		}
+		return processScanInboxPage(context.notion, page);
+	},
+});
+
+worker.tool("processScanInboxQueue", {
+	title: "Process Scan Inbox Queue",
+	description:
+		"Process pending Scan Inbox rows with Status = New. This is the fallback when Notion database automations are not enabled.",
+	schema: j.object({
+		limit: j.number(),
+	}),
+	execute: async ({ limit }, context) => {
+		return processScanInboxQueue(context.notion, limit);
+	},
 });
 
 worker.tool("identifyAndEnrichCard", {

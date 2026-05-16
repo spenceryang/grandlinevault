@@ -17,6 +17,7 @@ Live workspace: [Grand Line Vault in Notion](https://www.notion.so/Grand-Line-Va
 - Scan Inbox, Owned Cards, Wishlists, and Master Set databases.
 - Gallery, set-completion, owner, duplicate, wishlist, and portfolio-style views in Notion.
 - GIBL image-recognition integration for the scan path.
+- Scan Inbox upload path: upload a `Front image`, then run `processScanInboxQueue` to recognize/enrich the card and create an owned-card record. The true `processScanInboxUpload` Notion automation is coded but gated until the workspace has Worker automations enabled.
 - English-only recognition guardrails.
 - OPTCG API card, set, starter-deck, promo, DON!!, price, and image-fetch helpers.
 - Offline OP15-EB04 seed data for resilient demos when the live image/card API is unavailable.
@@ -27,7 +28,7 @@ Live workspace: [Grand Line Vault in Notion](https://www.notion.so/Grand-Line-Va
 ### Still intentionally open
 
 - The `Owned` checkbox in the Worker-managed Master Set database is read-only from outside the managed sync. The next implementation should compute ownership inside the sync or create a separate completion overlay database keyed by owned cards.
-- Scan Inbox automation is wired as a Worker capability, but the full “drop image in Notion page and auto-process without an Agent command” loop still needs the final trigger/polling path.
+- True upload-trigger automation is blocked until Notion enables Worker automation capabilities for the workspace. Current fallback: upload image, keep Status = `New`, then run `processScanInboxQueue`.
 - Portfolio history currently uses snapshots and collection fields; true gain/loss over time needs recurring price snapshots plus a charting view.
 - Buying flow is P2 and should start as marketplace outbound links, not checkout.
 
@@ -51,7 +52,7 @@ flowchart LR
 | Area | Purpose |
 | --- | --- |
 | Grand Line Vault home | Team-facing command center and demo script. |
-| Scan Inbox | Drop/review scans before they become owned copies. |
+| Scan Inbox | Upload a `Front image`; the Worker automation writes status/result and creates the owned copy. |
 | Owned Cards | Source of truth for collection entries, owners, quantities, price, condition, and card metadata. |
 | Wishlists | Chase cards and future recommendation inputs. |
 | Master Set | Worker-managed OP set/variant catalog for completion tracking. |
@@ -70,10 +71,16 @@ Note: the Grand Line Vault home page links the workspace together. If a teammate
 - `syncOptcgMasterSet` — OP master-set variants and metadata.
 - `syncOptcgSetAnalytics` — set-level counts and total market value.
 
+### Automations
+
+- `processScanInboxUpload` — coded and gated behind `ENABLE_NOTION_AUTOMATIONS=1`; use when Worker automations are enabled for the workspace.
+
 ### Agent tools
 
 - `identifyCard`
 - `identifyAndEnrichCard`
+- `processScanInboxPage`
+- `processScanInboxQueue`
 - `getCardDetails`
 - `getSetCards`
 - `filterCatalogCards`
@@ -106,6 +113,7 @@ npm install
 
 ```text
 NOTION_API_TOKEN=
+SCAN_INBOX_DATA_SOURCE_ID=
 OWNED_CARDS_DATA_SOURCE_ID=
 WISHLISTS_DATA_SOURCE_ID=
 GIBL_API_KEY=
@@ -119,6 +127,7 @@ CATALOG_FEED_URL=
 PRICE_FEED_URL=
 OPTCG_SET_IDS=OP-01,OP-02,OP-03,OP-04,OP-05,OP-06,OP-07,EB-01,OP-08,OP-09,OP-10,OP-11,EB-02,OP-12,PRB-01,PRB-02,OP-13,OP14-EB04,EB-03,OP15-EB04
 RECOGNITION_CONFIDENCE_THRESHOLD=0.82
+ENABLE_NOTION_AUTOMATIONS=0
 ```
 
 6. Create/share the Notion databases from [the setup guide](./docs/NOTION_WORKSPACE_SETUP.md).

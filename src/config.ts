@@ -1,4 +1,7 @@
 export const config = {
+	scanInboxDataSourceId:
+		process.env.SCAN_INBOX_DATA_SOURCE_ID ??
+		process.env.SCAN_INBOX_DATABASE_ID,
 	ownedCardsDataSourceId:
 		process.env.OWNED_CARDS_DATA_SOURCE_ID ??
 		process.env.OWNED_CARDS_DATABASE_ID,
