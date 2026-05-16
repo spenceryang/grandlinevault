@@ -1,0 +1,126 @@
+# Image Gallery Views
+
+Every card-bearing database in Grand Line Vault already stores an image URL or a Notion file pointer. To browse by image instead of by name, you turn on Notion's **Gallery view** on the same database — no schema or code change required.
+
+This page is the recipe for doing it consistently across the workspace, so collectors get the same image-first browsing experience on every board.
+
+## Which databases support gallery view today
+
+| Database | Image property | Configured by | Gallery-ready? |
+|---|---|---|---|
+| Card Catalog (`cardCatalog`) | `Image` (file) | `src/index.ts` | ✅ |
+| Master Set (`masterSet`) | `Image` (url) | `src/notion/master-set-database.ts` | ✅ |
+| Luffy Index ETF (`luffyIndex`) | `Image` (url) | `src/notion/luffy-index-database.ts` | ✅ |
+| Owned Cards (user-managed) | `Scan` / image field | `docs/NOTION_WORKSPACE_SETUP.md` | ✅ |
+| Set Completion Dashboard (`setAnalytics`) | — | `src/notion/analytics-databases.ts` | ❌ summary board, no per-row image |
+| Price Snapshots (`priceSnapshots`) | — | `src/index.ts` | ❌ time-series, no per-row image |
+
+`url`-typed images (master set, Luffy index) and `file`-typed images (card catalog) both render in Notion gallery tiles — Notion picks them up automatically when you point a gallery view at that property.
+
+## Recipe: add a gallery view to any of the above
+
+In Notion, open the database page (`Grand Line Vault · Card Catalog`, `Master Set`, `Luffy Index ETF`, etc.) and:
+
+1. Click **`+`** next to the existing view tabs.
+2. Choose **Gallery**.
+3. Name it something clear: `Gallery`, `Card Wall`, or `Image View`.
+4. In the new view, click **`···` → Layout** and configure:
+   - **Card preview**: the `Image` property (or `Scan` on Owned Cards)
+   - **Card size**: `Medium` for browsing, `Large` for showcase boards
+   - **Card preview**: **Fit image** if you want the full card uncropped, **Page cover** for an edge-to-edge look
+5. Under **Properties**, hide everything except 2–4 fields you want under each tile — typically:
+   - Card Catalog: `Name`, `Rarity`, `Set Name`
+   - Master Set: `Name`, `Variant`, `Rarity`
+   - Luffy Index: `Name`, `Market Price`, `Index Weight`
+6. **Sort** and **Filter** as you would any other view. Two especially useful presets:
+   - Filter `Owned = true` → "My Wall" view: only the cards you actually own, as a wall of art
+   - Filter `Owned = false`, sort by `Market Price` asc → cheap missing cards (buy-target gallery)
+
+## Recommended gallery views per board
+
+### Card Catalog → "Set Wall"
+- Group: implicit (don't group), filter `Set Code = OP-01` per view, duplicate the view per set
+- Card preview: `Image`
+- Card size: Medium
+- Visible properties: `Name`, `Rarity`, `Color`
+
+### Master Set → "Master Set Tracker"
+- Card preview: `Image`
+- Sort: `Variant` asc, then `Card ID` asc (base before parallel, in number order)
+- Visible properties: `Name`, `Variant`, `Rarity`
+- Color-tag the `Variant` select chips (already configured in the schema) so base/parallel/alt-art/promo are visually distinct
+
+### Master Set → "Need List"
+- Same as Master Set Tracker, but filter `Owned = false` and sort by `Rarity` (Leaders + Secret Rares first)
+- Use this view when you're at a card shop and want to scan against a missing-list
+
+### Luffy Index ETF → "Index Holdings"
+- Card preview: `Image`
+- Sort: `Index Weight` desc (biggest weighted card first)
+- Visible properties: `Name`, `Market Price`, `Index Weight`
+- Pin this as the default view on the Luffy Index page — the gallery is the dashboard
+
+### Luffy Index ETF → "Owned"
+- Filter `Owned = true`, sort by `Market Price` desc
+- Visible properties: `Name`, `Market Price`
+- Useful as "what do I currently hold of the Luffy index"
+
+### Owned Cards → "My Collection Wall"
+- Card preview: `Scan` (the per-user image)
+- Card size: Large
+- Visible properties: `Card Name`, `Quantity`, `Pre-grade estimate`
+- Best on the per-owner page in the Crew workspace
+
+## Why we don't auto-create gallery views in code
+
+Notion views (table / board / gallery / calendar / timeline) are per-workspace UI configuration. The Workers SDK can declare and populate **databases**, not views. Views live in the Notion page tree where the database is embedded, and they're set up once by the workspace owner.
+
+So: the gallery view is a **per-workspace one-time setup** — not something each sync run rewrites. If you copy this workspace to a new Notion account, follow the recipe above to recreate the views.
+
+## Suggested page layout for a "Card Wall" landing page
+
+Create a single Notion page called **`Card Wall`** that pulls each of the gallery views above into linked database blocks. Layout idea:
+
+```
+# Card Wall
+
+## Master Set tracker
+[Linked database: Master Set · Master Set Tracker view]
+
+## Owned only
+[Linked database: Master Set · Need List view]
+
+## Luffy index
+[Linked database: Luffy Index ETF · Index Holdings view]
+
+## Recently added to my collection
+[Linked database: Owned Cards · My Collection Wall view, sort by Acquisition Date desc, limit 24]
+```
+
+That gives collectors one stop for visual browsing across every gallery-enabled database. Pair it with the **Set Completion Dashboard** (which already has progress bars per the analytics PR) on the same page and you have the whole "what do I own, what's it worth, what does it look like" experience in one Notion page.
+
+## When you want a brand-new gallery-only board
+
+If you want a stripped-down gallery DB with **no other view clutter** (e.g. a kid-friendly "look at the pretty cards" surface), declare a new managed database in `src/index.ts`:
+
+```ts
+const cardGallery = worker.database("cardGallery", {
+  type: "managed",
+  initialTitle: "Card Gallery",
+  primaryKeyProperty: "Variant ID",
+  schema: {
+    properties: {
+      Name: Schema.title(),
+      "Variant ID": Schema.richText(),
+      Image: Schema.url(),
+      Set: Schema.richText(),
+      Rarity: Schema.richText(),
+      Color: Schema.richText(),
+    },
+  },
+});
+```
+
+Then wire a sync that copies from `listAllOptcgSetCards()` into this minimal schema. In Notion, only add a Gallery view to this database and hide everything else. It becomes the dedicated wall.
+
+Not in this PR — the existing databases already cover the use case once you add a Gallery view per the recipe above.
