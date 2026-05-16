@@ -1,6 +1,6 @@
 {
   "name": "grandlinevault",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Notion-native One Piece Card Game collection manager for the Notion hackathon.",
   "type": "module",
   "main": "dist/index.js",
