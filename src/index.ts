@@ -23,6 +23,7 @@ import { fetchOwnedCards } from "./notion/read-owned-cards.js";
 import {
 	processLatestScan,
 	processScanInboxPage,
+	processScanInboxQueue,
 	whatDidIJustScan,
 } from "./notion/process-scan-inbox.js";
 import { createOwnedCardPage } from "./notion/write-owned-card.js";
@@ -575,6 +576,24 @@ worker.tool("handleNewScan", {
 			...result,
 			agentInstruction:
 				"Stop after this tool call. Do not call any other scan-processing tool. Report this result to the user as the final scan outcome.",
+		};
+	},
+});
+
+worker.tool("handleAllNewScans", {
+	title: "Handle All New Scans",
+	description:
+		"Primary agent command for processing the full Scan Inbox queue. Process up to 10 rows with Status = New, create owned-card records when matched, update each Scan Inbox result, then stop. Use this when the user asks to process all new scans or the scan inbox.",
+	schema: j.object({
+		name: j.string().nullable().describe("Optional agent-provided command name. Ignored by the worker."),
+	}),
+	execute: async (_input, context) => {
+		const result = await processScanInboxQueue(context.notion, 10);
+		return {
+			...result,
+			processedCount: result.processed.length,
+			agentInstruction:
+				"Stop after this tool call. Do not call any other scan-processing tool. Summarize matched, rejected, and needs-review rows to the user.",
 		};
 	},
 });

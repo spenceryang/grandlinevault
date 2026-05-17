@@ -56,7 +56,7 @@ Agent behavior rules for the demo:
 - Default to the requesting user's cards when the owner is clear; say explicitly when showing all crew cards.
 - Prefer clean display IDs like `OP01-001 Parallel` instead of internal IDs like `OP01-001_p1`.
 - Include card name, set/card number, rarity or type, color, quantity, owner, market price, and a Notion link when available.
-- If scan automation is unavailable, use the manual fallback: upload image, leave status as `New`, then run `handleNewScan` or ask the Agent to process the latest scan.
+- If scan automation is unavailable, use the manual fallback: upload image, leave status as `New`, then run `handleNewScan` for one row, or `handleAllNewScans` to drain the queue.
 
 ## Features
 
