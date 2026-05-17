@@ -566,7 +566,9 @@ worker.tool("handleNewScan", {
 	title: "Handle New Scan",
 	description:
 		"Primary agent command for 'handle new scan'. Process exactly one most-recent Scan Inbox row with Status = New, create the owned-card record when matched, update the Scan Inbox result, then stop. Do not call Batch Process Scan Inbox Queue after this tool.",
-	schema: j.object({}),
+	schema: j.object({
+		name: j.string().nullable().describe("Optional agent-provided command name. Ignored by the worker."),
+	}),
 	execute: async (_input, context) => {
 		const result = await processLatestScan(context.notion);
 		return {
