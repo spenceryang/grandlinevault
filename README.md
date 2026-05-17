@@ -56,7 +56,7 @@ Agent behavior rules for the demo:
 - Default to the requesting user's cards when the owner is clear; say explicitly when showing all crew cards.
 - Prefer clean display IDs like `OP01-001 Parallel` instead of internal IDs like `OP01-001_p1`.
 - Include card name, set/card number, rarity or type, color, quantity, owner, market price, and a Notion link when available.
-- If scan automation is unavailable, use the manual fallback: upload image, leave status as `New`, then run `processLatestScan` or ask the Agent to process the latest scan.
+- If scan automation is unavailable, use the manual fallback: upload image, leave status as `New`, then run `handleNewScan` or ask the Agent to process the latest scan.
 
 ## Features
 
@@ -219,7 +219,7 @@ The Worker provisions and populates a set of managed Notion databases that each 
 - Gallery, set-completion, owner, duplicate, wishlist, and portfolio-style views in Notion.
 - OpenAI vision recognition for the scan path.
 - Slack image intake tool: download Slack image, add it to Scan Inbox, process it, and classify it into Owned Cards.
-- Scan Inbox upload path: upload a `Front image`, then run `processLatestScan` for a one-card demo or `processScanInboxQueue` for a batch to recognize/enrich the card and create an owned-card record. The true `processScanInboxUpload` Notion automation is coded but gated until the workspace has Worker automations enabled.
+- Scan Inbox upload path: upload a `Front image`, then run `handleNewScan` for a one-card demo or `processScanInboxQueue` for a batch to recognize/enrich the card and create an owned-card record. The true `processScanInboxUpload` Notion automation is coded but gated until the workspace has Worker automations enabled.
 - English-only recognition guardrails.
 - OPTCG API card, set, starter-deck, promo, DON!!, price, and image-fetch helpers.
 - Offline OP15-EB04 seed data for resilient demos when the live image/card API is unavailable.
@@ -303,7 +303,7 @@ The battle simulator is deployed as a separate Notion Worker using `workers.op-b
 - `identifyAndEnrichCard`
 - `processScanInboxPage`
 - `processScanInboxQueue`
-- `processLatestScan`
+- `handleNewScan`
 - `processSlackCardImage`
 - `whatDidIJustScan`
 - `getCardDetails`

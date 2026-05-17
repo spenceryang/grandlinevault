@@ -497,9 +497,9 @@ worker.tool("processScanInboxPage", {
 });
 
 worker.tool("processScanInboxQueue", {
-	title: "Process Scan Inbox Queue",
+	title: "Batch Process Scan Inbox Queue",
 	description:
-		"Process pending Scan Inbox rows with Status = New. This is the fallback when Notion database automations are not enabled.",
+		"Batch admin tool. Only use when the user explicitly asks to process the queue, process all pending scans, or batch multiple Scan Inbox rows. Do not use for the normal 'handle new scan' command, and do not call this after Handle New Scan.",
 	schema: j.object({
 		limit: j.number(),
 	}),
@@ -575,10 +575,10 @@ worker.webhook("slackCardIntake", {
 	},
 });
 
-worker.tool("processLatestScan", {
-	title: "Process Latest Scan",
+worker.tool("handleNewScan", {
+	title: "Handle New Scan",
 	description:
-		"Process the most recently edited Scan Inbox row with Status = New. Use this for a one-card demo.",
+		"Primary agent command for 'handle new scan'. Process exactly one most-recent Scan Inbox row with Status = New, create the owned-card record when matched, update the Scan Inbox result, then stop. Do not call Batch Process Scan Inbox Queue after this tool.",
 	schema: j.object({}),
 	execute: async (_input, context) => {
 		return processLatestScan(context.notion);
