@@ -14,13 +14,24 @@ export const decksDatabaseConfig = {
 			"Deck Name": Schema.title(),
 			"Deck ID": Schema.richText(),
 
-			// At-a-glance state — colored chips that drive the
-			// "My Decks", "Building", "Active" views.
-			Status: Schema.select([
-				{ name: "Building", color: "yellow" },
-				{ name: "Active", color: "green" },
-				{ name: "Retired", color: "gray" },
-			]),
+			// Native Notion Status property — gets the dot icon, grouped
+			// colors, and kanban-by-group view support.
+			Status: Schema.status({
+				groups: [
+					{
+						name: "To-do",
+						options: [{ name: "Building", color: "yellow" }],
+					},
+					{
+						name: "In progress",
+						options: [{ name: "Active", color: "green" }],
+					},
+					{
+						name: "Complete",
+						options: [{ name: "Retired", color: "gray" }],
+					},
+				],
+			}),
 			Format: Schema.select([
 				{ name: "Standard", color: "blue" },
 				{ name: "Online", color: "green" },

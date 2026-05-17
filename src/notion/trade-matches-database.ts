@@ -16,13 +16,28 @@ export const tradeMatchesDatabaseConfig = {
 
 			// Status + Priority chips are the headline visuals. Filter
 			// views (Suggested / Proposed / Accepted) ride on Status.
-			Status: Schema.select([
-				{ name: "Suggested", color: "blue" },
-				{ name: "Proposed", color: "yellow" },
-				{ name: "Accepted", color: "green" },
-				{ name: "Declined", color: "red" },
-				{ name: "Completed", color: "gray" },
-			]),
+			Status: Schema.status({
+				groups: [
+					{
+						name: "To-do",
+						options: [{ name: "Suggested", color: "blue" }],
+					},
+					{
+						name: "In progress",
+						options: [
+							{ name: "Proposed", color: "yellow" },
+							{ name: "Accepted", color: "green" },
+						],
+					},
+					{
+						name: "Complete",
+						options: [
+							{ name: "Declined", color: "red" },
+							{ name: "Completed", color: "gray" },
+						],
+					},
+				],
+			}),
 			Priority: Schema.select([
 				{ name: "High", color: "red" },
 				{ name: "Medium", color: "yellow" },
