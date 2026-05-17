@@ -158,9 +158,25 @@ SLACK_OWNER_MAP=U_SLACK_SPENCER:Spencer,U_SLACK_JARREN:Jarren,U_SLACK_WAFFLE:Waf
 Supported paths:
 
 1. **Agent tool path** — if the Notion Agent can see or pass the Slack file URL, ask it to call `processSlackCardImage` with `imageUrl`, `slackUserId`, and/or `ownerName`.
-2. **Relay/webhook path** — use a tiny Slack relay or Slack Workflow to send `{ image_url, user_id, filename, response_url }` to the Worker webhook `slackCardIntake`. The Worker creates the Scan Inbox row, processes it, creates the Owned Card row, and posts back to `response_url` when provided.
+2. **Relay/webhook path** — deploy `api/slack-relay.ts` and point Slack Event Subscriptions at it. The relay handles Slack URL verification, extracts image files from `app_mention` / `file_shared` events, forwards the Slack file URL to the Worker webhook `slackCardIntake`, and the Worker creates the Scan Inbox + Owned Card rows.
 
-Direct Slack Events API registration usually needs a relay because Slack URL verification expects a raw `challenge` response, while Notion Worker webhooks return the standard Worker success response.
+Relay deployment env vars:
+
+```text
+NOTION_SLACK_INTAKE_WEBHOOK_URL=https://www.notion.so/webhooks/worker/...
+SLACK_BOT_TOKEN=xoxb-...
+SLACK_SIGNING_SECRET=...
+```
+
+Slack setup:
+
+1. Deploy the repo to Vercel or another host that exposes `api/slack-relay.ts` as `/api/slack-relay`.
+2. Slack app → **Event Subscriptions** → Enable Events.
+3. Request URL: `https://<your-deploy>/api/slack-relay`.
+4. Bot events: `app_mention`, `file_shared`.
+5. OAuth scopes: `files:read`, `chat:write`, `app_mentions:read`, `channels:history`, `groups:history`.
+6. Reinstall the Slack app after changing scopes/events.
+7. Invite GrandlineVault to the test channel.
 
 Recommended demo prompts:
 

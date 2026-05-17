@@ -70,7 +70,23 @@ On a confident match, the Worker pulls canonical card data from the OPTCG API (`
 ### Slack image intake
 Vault Quartermaster can now process a Slack card image instead of requiring the user to manually upload into Notion first. The `processSlackCardImage` tool downloads the Slack file with `SLACK_BOT_TOKEN`, uploads the image into Scan Inbox through Notion File Uploads, runs the existing GIBL + OPTCG processor, creates the Owned Card row, and returns a Slack-ready reply with the result and Notion links.
 
-There is also a `slackCardIntake` Worker webhook for a small Slack relay or Workflow payload. Direct Slack Events API setup still needs a tiny relay because Slack URL verification expects the raw `challenge` body, while Notion Worker webhooks return the standard Worker success response.
+There is also a production Slack relay at `api/slack-relay.ts`. Slack Events API calls the relay, the relay handles Slack URL verification and forwards image file payloads to the Notion Worker webhook `slackCardIntake`.
+
+Relay environment variables:
+
+```text
+NOTION_SLACK_INTAKE_WEBHOOK_URL=https://www.notion.so/webhooks/worker/...
+SLACK_BOT_TOKEN=xoxb-...
+SLACK_SIGNING_SECRET=...
+```
+
+Slack app setup:
+
+1. Deploy the repo to a serverless host that supports `api/slack-relay.ts` (Vercel is the intended path).
+2. In Slack → Event Subscriptions, set Request URL to `https://<your-deploy>/api/slack-relay`.
+3. Subscribe bot events: `app_mention` and `file_shared`.
+4. OAuth scopes: `files:read`, `chat:write`, `app_mentions:read`, plus `channels:history` / `groups:history` if testing in channels/private channels.
+5. Invite the GrandlineVault app to the test channel.
 
 Useful Slack prompts:
 
