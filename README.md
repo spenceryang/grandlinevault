@@ -3,7 +3,7 @@
 Grand Line Vault is a Notion-native One Piece Card Game collector built for the Notion hackathon. The product loop is intentionally simple:
 
 ```text
-scan → recognize English card → enrich from OPTCG API → save owned copy → explore collection
+scan → recognize English card → enrich from OPTCG API → save owned copy → explore collection → ask the Agent
 ```
 
 Live workspace: [Grand Line Vault in Notion](https://www.notion.so/Grand-Line-Vault-3627be9e126e81bb83ced51cef2628b0)
@@ -40,6 +40,8 @@ The current hackathon demo uses Slack + Notion together:
 6. Collector asks the OP Battle worker to build decks or simulate owner-vs-owner matchups from the same Owned Cards database.
 ```
 
+For recording, use the [3-minute demo script](./docs/DEMO_SCRIPT_3_MIN.md).
+
 Validated Slack examples:
 
 ```text
@@ -56,12 +58,19 @@ Agent behavior rules for the demo:
 - Default to the requesting user's cards when the owner is clear; say explicitly when showing all crew cards.
 - Prefer clean display IDs like `OP01-001 Parallel` instead of internal IDs like `OP01-001_p1`.
 - Include card name, set/card number, rarity or type, color, quantity, owner, market price, and a Notion link when available.
-- If scan automation is unavailable, use the manual fallback: upload image, leave status as `New`, then run `handleNewScan` for one row, or `handleAllNewScans` to drain the queue.
+- If scan automation is unavailable, use the manual fallback: upload image into the `Front image` property, leave status as `New`, then run `handleNewScan` for one row, or `handleAllNewScans` to drain the queue.
 
 ## Features
 
 ### Scan and recognize
-Upload a card photo to the Scan Inbox, or send a card image to Vault Quartermaster from Slack. The Worker uses OpenAI vision (`OPENAI_API_KEY`) to read the visible card number/name, classifies confidence + language, and only auto-matches English cards before canonicalizing through OPTCG. Low-confidence and non-English scans land in a review queue rather than polluting the collection. Front-only scans work; front+back enables a richer pre-grade estimate.
+Upload a card photo to the `Front image` property in Scan Inbox, or send a card image to Vault Quartermaster from Slack. The Worker uses OpenAI vision (`OPENAI_API_KEY`) to read the visible card number/name, classifies confidence + language, and only auto-matches English cards before canonicalizing through OPTCG. Low-confidence and non-English scans land in a review queue rather than polluting the collection. Front-only scans work; front+back enables a richer pre-grade estimate.
+
+Current demo commands:
+
+```text
+handleNewScan       # process one latest New row
+handleAllNewScans   # process up to 10 New rows
+```
 
 ### Enrich from OPTCG live data
 On a confident match, the Worker pulls canonical card data from the OPTCG API (`getCardDetails`, `getSetCards`, `filterCatalogCards`, plus starter-deck / promo / DON variants) — name, set, rarity, color, type, cost, power, counter, attribute, art, market price. The same library powers offline demo mode using a bundled OP15-EB04 seed.
@@ -219,7 +228,7 @@ The Worker provisions and populates a set of managed Notion databases that each 
 - Gallery, set-completion, owner, duplicate, wishlist, and portfolio-style views in Notion.
 - OpenAI vision recognition for the scan path.
 - Slack image intake tool: download Slack image, add it to Scan Inbox, process it, and classify it into Owned Cards.
-- Scan Inbox upload path: upload a `Front image`, then run `handleNewScan` for a one-card demo to recognize/enrich the card and create an owned-card record. The true `processScanInboxUpload` Notion automation is coded but gated until the workspace has Worker automations enabled.
+- Scan Inbox upload path is working: upload a card into the `Front image` property, set `Status = New`, then run `handleNewScan` for one card or `handleAllNewScans` for the queue. The true `processScanInboxUpload` Notion automation is coded but gated until the workspace has Worker automations enabled.
 - English-only recognition guardrails.
 - OPTCG API card, set, starter-deck, promo, DON!!, price, and image-fetch helpers.
 - Offline OP15-EB04 seed data for resilient demos when the live image/card API is unavailable.
@@ -240,7 +249,7 @@ The Worker provisions and populates a set of managed Notion databases that each 
 
 ### Still intentionally open
 
-- True upload-trigger automation is blocked until Notion enables Worker automation capabilities for the workspace. Current fallback: upload image, keep Status = `New`, then ask Vault Quartermaster to `handle new scan`.
+- True upload-trigger automation is blocked until Notion enables Worker automation capabilities for the workspace. Current fallback: upload image into `Front image`, keep Status = `New`, then ask Vault Quartermaster to `handle new scan` or `handle all new scans`.
 - Portfolio history currently uses snapshots and collection fields; true gain/loss over time needs recurring price snapshots plus a charting view.
 - Buying flow is P2 and should start as marketplace outbound links, not checkout.
 - Rarity-breakdown and top-cards analytics templates exist but their syncs are not yet wired.
@@ -303,6 +312,7 @@ The battle simulator is deployed as a separate Notion Worker using `workers.op-b
 - `identifyAndEnrichCard`
 - `processScanInboxPage`
 - `handleNewScan`
+- `handleAllNewScans`
 - `processSlackCardImage`
 - `whatDidIJustScan`
 - `getCardDetails`
@@ -383,6 +393,7 @@ src/
   notion/                   Notion database read/write helpers and schemas
   providers/                Recognition, generic feeds, OPTCG, TCGdex, and PriceCharting providers
 docs/
+  DEMO_SCRIPT_3_MIN.md          3-minute video script for hackathon demo
   NOTION_WORKSPACE_SETUP.md   Initial workspace provisioning
   OP_BATTLE_LAB.md            Battle simulator Worker, commands, and model limits
   GALLERY_VIEWS.md            Image-gallery view recipes
