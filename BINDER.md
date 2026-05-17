@@ -54,6 +54,24 @@ Duplicate the auto-created Master Set view three times and configure each:
 - No filter
 - Use this view for screenshots / IG-story exports and the "I just want to look at the binder" mode
 
+### B&W → color binder ("cards light up as you collect them")
+
+The Master Set sync writes **two image properties** per card:
+
+- **`Image`** (file) — full color art, used by the "Owned Wall"
+- **`Need Image`** (file) — the same art wrapped through wsrv.nl with `&filt=greyscale`, used by the "Missing Wall"
+
+Both URLs go through the wsrv.nl proxy at a uniform width so tiles share dimensions across the grid. Stack two filtered views on the page and Notion does the rest — toggle the `Owned` checkbox on any card and it moves from the grayscale wall to the color wall instantly. No formulas, no re-sync.
+
+| View | Filter | Card preview | Result |
+|---|---|---|---|
+| **Owned Wall** | `Owned` is checked | `Image` | Full-color trophy strip |
+| **Missing Wall** | `Owned` is not checked | `Need Image` | B&W "still to collect" strip |
+
+Pair both with the standard image-only settings (Card size Small, Fit page cover on, hide every property including title) and you get the canonical card-shop binder feel — every card slotted into its space, grayscale until you pull it.
+
+This mirrors the treatment on the [optcg-set-master-wall](./docs/OPTCG_SET_MASTER_WALL.md) template, which has the same pattern at the set level.
+
 ### Cards-per-row math
 
 Notion auto-flows gallery cards based on page width × card size. Quick reference for a Full-Width page on a typical 1440px desktop:
