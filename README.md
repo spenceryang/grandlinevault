@@ -415,6 +415,20 @@ GRAND_LINE_VAULT_SPEC.md      Product/team spec
 CHANGELOG.md                  Release notes
 ```
 
+## Bonus points for judges
+
+The core judged path is the scan → collect → ask loop. If there is extra time in a walkthrough, Grand Line Vault also ships or scaffolds these deeper collector-system rails:
+
+- **OP Battle Lab:** separate Notion Worker that auto-builds legal-ish decks from Owned Cards, runs Monte Carlo matchups, and writes Battle Run history.
+- **Wishlists, duplicates, and trades:** chase-card tracking, duplicate dispositions, and cross-owner duplicate ↔ wishlist trade matching.
+- **Master Set and visual binder views:** owned/missing tracking across base, parallel, alt-art, promo, starter, and DON!! cards.
+- **Portfolio intelligence:** price snapshots, price movers, top holdings, and value breakdowns by owner, set, rarity, and color.
+- **Recommendation layer:** related-card scoring, character indices, Luffy Index ETF, archetype completion, and future chase recommendations.
+- **Multi-intake rails:** Notion Scan Inbox, Slack image intake, and email intake scaffolding.
+- **Future provider rails:** PriceCharting, PSA, and Pokémon/TCGdex providers are isolated as expansion tracks while keeping the live demo One Piece-first.
+
+Positioning: the hackathon ship is the magic loop; the architecture already points toward a full social collector workspace — scan, collect, value, trade, battle, and recommend.
+
 ## Product notes
 
 - Automated grading is a **pre-grade estimate**, not an official PSA grade.

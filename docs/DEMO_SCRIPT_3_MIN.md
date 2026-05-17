@@ -75,3 +75,20 @@ If the live scan is slow, use these instead:
 - Use `handleNewScan` for one row.
 - Use `handleAllNewScans` for the queue.
 - If Notion automation triggers are unavailable, frame this as the intentional manual fallback for hackathon judging.
+
+## Bonus points if there is extra time
+Use this only after the core scan → collect → ask loop lands. Keep it fast; this is proof of depth, not the main story.
+
+**Say:** "The demo path is intentionally simple, but the repo already has the expansion rails for a full collector operating system."
+
+Mention quickly:
+
+- **OP Battle Lab:** separate Notion Worker that auto-builds legal-ish decks from Owned Cards, runs Monte Carlo matchups, and saves Battle Run history.
+- **Wishlists + duplicates + trade matching:** track chase cards, duplicate copies, and owner-to-owner trade candidates.
+- **Set completion + Master Set wall:** every printing can be tracked, with owned/missing progress and visual binder views.
+- **Portfolio intelligence:** price snapshots, price movers, top holdings, value by owner/set/rarity, and future gain/loss charts.
+- **Recommendation layer:** related-card scoring, character indices, Luffy Index ETF, archetype completion, and "what should I chase next?" style prompts.
+- **Multi-intake rails:** Notion Scan Inbox, Slack image intake, and email intake scaffolding.
+- **Future provider rails:** PriceCharting, PSA, and Pokémon/TCGdex providers are isolated as expansion tracks without polluting the One Piece demo path.
+
+**Close line:** "So the hackathon ship is the magic loop, but the architecture is already pointed at a full social collector workspace: scan, collect, value, trade, battle, and recommend."
