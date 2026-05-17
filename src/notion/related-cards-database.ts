@@ -10,13 +10,15 @@ export const relatedCardsDatabaseConfig = {
 	schema: {
 		databaseIcon: emojiIcon("🔗"),
 		properties: {
+			// Title + pk anchor every view.
 			"Card Name": Schema.title(),
 			"Relation ID": Schema.richText(),
-			"Source Card ID": Schema.richText(),
-			"Source Card Name": Schema.richText(),
-			"Related Card ID": Schema.richText(),
-			"Related Card Image": Schema.url(),
+
+			// The headline metric — the score is what "related" means.
 			Score: Schema.number(),
+
+			// Why this card was recommended. Multi-select with colored
+			// chips so the reasons are eye-catching at a glance.
 			Reasons: Schema.multiSelect([
 				{ name: "same-character", color: "yellow" },
 				{ name: "same-set", color: "blue" },
@@ -26,13 +28,26 @@ export const relatedCardsDatabaseConfig = {
 				{ name: "cost-curve", color: "orange" },
 				{ name: "same-rarity", color: "gray" },
 			]),
-			"Related Set": Schema.richText(),
+
+			// Image as `file` so gallery views can use it as the card
+			// cover. The "recommendation wall" view rides on this.
+			"Related Card Image": Schema.file(),
+
+			// The recommended card's details.
+			"Related Market Price": Schema.number("dollar"),
+			"Related Rarity": Schema.richText(),
 			"Related Color": Schema.richText(),
 			"Related Card Type": Schema.richText(),
-			"Related Rarity": Schema.richText(),
 			"Related Cost": Schema.number(),
 			"Related Power": Schema.number(),
-			"Related Market Price": Schema.number("dollar"),
+			"Related Set": Schema.richText(),
+
+			// Source card (the "given" half of the relation) + the
+			// related card id sit at the end — they're identifier
+			// columns more than insight columns.
+			"Source Card Name": Schema.richText(),
+			"Source Card ID": Schema.richText(),
+			"Related Card ID": Schema.richText(),
 		},
 	},
 };
