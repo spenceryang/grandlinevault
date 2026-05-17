@@ -12,6 +12,11 @@ import {
 	summarizeMasterSetCompletion,
 } from "./lib/master-set.js";
 import {
+	STANDARD_GRID_WIDTH,
+	toCompactColorImageUrl,
+	toGreyscaleImageUrl,
+} from "./lib/optcg-set-master-wall.js";
+import {
 	MASTER_SET_DATABASE_KEY,
 	masterSetDatabaseConfig,
 } from "./notion/master-set-database.js";
@@ -343,7 +348,18 @@ worker.sync("syncOptcgMasterSet", {
 					Rarity: Builder.richText(entry.rarity ?? ""),
 					Color: Builder.richText(entry.color ?? ""),
 					"Card Type": Builder.richText(entry.cardType ?? ""),
-					Image: Builder.url(entry.imageUrl),
+					// Color art for the Owned (lit-up) gallery view; greyscale
+					// for the Missing (B&W) gallery view. Both go through wsrv
+					// at STANDARD_GRID_WIDTH so the binder tiles share uniform
+					// dimensions. See BINDER.md for the two-view setup.
+					Image: Builder.file(
+						toCompactColorImageUrl(entry.imageUrl, STANDARD_GRID_WIDTH),
+						entry.name,
+					),
+					"Need Image": Builder.file(
+						toGreyscaleImageUrl(entry.imageUrl, STANDARD_GRID_WIDTH),
+						entry.name,
+					),
 					Owned: Builder.checkbox(false),
 				},
 			})),

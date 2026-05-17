@@ -24,7 +24,11 @@ export const masterSetDatabaseConfig = {
 			Rarity: Schema.richText(),
 			Color: Schema.richText(),
 			"Card Type": Schema.richText(),
-			Image: Schema.url(),
+			// Two image properties power the B&W → color binder. Each gallery
+			// view picks one of these as its Card preview (file-typed so
+			// Notion uses it as the page cover).
+			Image: Schema.file(),
+			"Need Image": Schema.file(),
 			Owned: Schema.checkbox(),
 		},
 	},
