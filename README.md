@@ -306,6 +306,28 @@ The battle simulator is deployed as a separate Notion Worker using `workers.op-b
 - `simulateBattle` — builds both decks, runs a Monte Carlo matchup, and writes a Battle Run history page.
 - `archiveBattleRuns` — marks older Battle Run pages as done so the workspace stays compact.
 
+### OP Battle Referee custom agent
+
+Recommended Notion Custom Agent settings:
+
+- **Agent name:** `OP Battle Referee`
+- **Read access:** Grand Line Vault main page and Owned Cards.
+- **Read + write access:** OP Battle · Battle Decks and OP Battle · Battle Runs, because simulations create permanent deck pages and battle-history pages.
+- **Worker tools:** enable `simulateBattle`, `buildBattleDeck`, and `archiveBattleRuns` from the `op-battle` Worker.
+- **Default run count:** 100 simulations unless the user specifies another number.
+- **Default strategies:** Spencer = `strongest`, Jarren = `worst-generation`, Waffle = `animal-kingdom`.
+
+Useful prompts:
+
+```text
+Simulate Spencer vs Waffle for 100 battles.
+Simulate Spencer strongest vs Jarren worst-generation.
+Build Waffle's animal-kingdom deck.
+Archive older battle runs and keep the latest 5.
+```
+
+The agent should always state that OP Battle Lab is official-rule-informed but simplified: it models leader, 50-card main deck, DON ramp, life pressure, cost curve, power, counter value, and card-type roles, while individual card text remains heuristic.
+
 ### Agent tools
 
 - `identifyCard`
