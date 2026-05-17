@@ -10,21 +10,33 @@ export const duplicateCardsDatabaseConfig = {
 	schema: {
 		databaseIcon: emojiIcon("🔁"),
 		properties: {
+			// Title + pk anchor every view.
 			"Card Name": Schema.title(),
 			"Duplicate ID": Schema.richText(),
-			Owner: Schema.richText(),
-			"Card ID": Schema.richText(),
-			"Total Owned": Schema.number(),
-			"Available Count": Schema.number(),
-			"Current Market Price": Schema.number("dollar"),
-			"Total Value": Schema.number("dollar"),
-			"Tradeable Value": Schema.number("dollar"),
+
+			// Status chip up front — Keep / Trade / Sell / Gift is the
+			// decision users make on this board.
 			Status: Schema.select([
 				{ name: "Keep", color: "gray" },
 				{ name: "Trade", color: "blue" },
 				{ name: "Sell", color: "green" },
 				{ name: "Gift", color: "purple" },
 			]),
+
+			// Headline tradeable money first, then total + per-copy market.
+			"Tradeable Value": Schema.number("dollar"),
+			"Total Value": Schema.number("dollar"),
+			"Current Market Price": Schema.number("dollar"),
+
+			// Count signals.
+			"Available Count": Schema.number(),
+			"Total Owned": Schema.number(),
+
+			// Owner near the end of the heavy block.
+			Owner: Schema.richText(),
+
+			// Machine identifier last.
+			"Card ID": Schema.richText(),
 		},
 	},
 };
@@ -39,11 +51,15 @@ export const duplicateOwnerSummaryDatabaseConfig = {
 		databaseIcon: emojiIcon("📦"),
 		properties: {
 			Owner: Schema.title(),
-			"Unique Duplicate Cards": Schema.number(),
-			"Total Duplicate Copies": Schema.number(),
-			"Total Tradeable Copies": Schema.number(),
-			"Total Duplicate Value": Schema.number("dollar"),
+
+			// Dollar headline first.
 			"Total Tradeable Value": Schema.number("dollar"),
+			"Total Duplicate Value": Schema.number("dollar"),
+
+			// Copy counts.
+			"Total Tradeable Copies": Schema.number(),
+			"Total Duplicate Copies": Schema.number(),
+			"Unique Duplicate Cards": Schema.number(),
 		},
 	},
 };
