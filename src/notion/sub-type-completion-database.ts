@@ -10,11 +10,19 @@ export const subTypeCompletionDatabaseConfig = {
 	schema: {
 		databaseIcon: emojiIcon("🎯"),
 		properties: {
+			// Title doubles as pk — Straw Hat Crew / Whitebeard Pirates / etc.
 			"Sub Type": Schema.title(),
-			Total: Schema.number(),
-			Owned: Schema.number(),
+
+			// Bar-renderable progress sits second. Toggle "Show as bar".
 			"Completion %": Schema.number("percent"),
+
+			// Counts immediately after the bar.
+			Owned: Schema.number(),
+			Total: Schema.number(),
 			"Missing Count": Schema.number(),
+
+			// Free-form list of missing card ids at the end — useful for
+			// table-view scanning but visually heavy.
 			"Missing Card IDs": Schema.richText(),
 		},
 	},
