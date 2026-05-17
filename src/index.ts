@@ -12,6 +12,10 @@ import {
 	summarizeMasterSetCompletion,
 } from "./lib/master-set.js";
 import {
+	resolveBinderWidth,
+	toCompactColorImageUrl,
+} from "./lib/optcg-set-master-wall.js";
+import {
 	MASTER_SET_DATABASE_KEY,
 	masterSetDatabaseConfig,
 } from "./notion/master-set-database.js";
@@ -313,6 +317,11 @@ worker.sync("syncOptcgMasterSet", {
 			return { changes: [], hasMore: false };
 		}
 
+		// Route card art through the wsrv.nl proxy at a width controlled by
+		// the BINDER_DENSITY env var. Default = Medium (360px) so the
+		// gallery card flows ~3-4 cards per row at typical Notion widths.
+		const binderWidth = resolveBinderWidth(process.env.BINDER_DENSITY);
+
 		await externalApiPacer.wait();
 		const cards = await getOptcgSet(setId);
 		const entries = buildMasterSetEntries(
@@ -343,7 +352,10 @@ worker.sync("syncOptcgMasterSet", {
 					Rarity: Builder.richText(entry.rarity ?? ""),
 					Color: Builder.richText(entry.color ?? ""),
 					"Card Type": Builder.richText(entry.cardType ?? ""),
-					Image: Builder.file(entry.imageUrl, entry.name),
+					Image: Builder.file(
+						toCompactColorImageUrl(entry.imageUrl, binderWidth),
+						entry.name,
+					),
 					Owned: Builder.checkbox(false),
 				},
 			})),

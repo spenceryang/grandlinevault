@@ -50,6 +50,23 @@ export const COMPACT_GRID_WIDTH = 280;
 export const STANDARD_GRID_WIDTH = 360;
 export const SHOWCASE_GRID_WIDTH = 480;
 
+/**
+ * Map a `BINDER_DENSITY` env value (small/medium/large) to a wsrv.nl
+ * thumbnail width. Unrecognized or empty values fall back to Medium
+ * so the binder always renders at a sensible default.
+ */
+export function resolveBinderWidth(density: string | undefined): number {
+	switch (density?.trim().toLowerCase()) {
+		case "small":
+			return COMPACT_GRID_WIDTH;
+		case "large":
+			return SHOWCASE_GRID_WIDTH;
+		case "medium":
+		default:
+			return STANDARD_GRID_WIDTH;
+	}
+}
+
 export function toGreyscaleImageUrl(
 	imageUrl: string,
 	thumbnailWidth?: number,
