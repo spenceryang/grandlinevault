@@ -4,6 +4,7 @@ import test from "node:test";
 import {
 	buildNotionWorkerPayload,
 	handleSlackRelayRequest,
+	inferOwnerNameFromText,
 	verifySlackSignature,
 } from "../src/relay/slack-relay.js";
 
@@ -50,6 +51,7 @@ test("buildNotionWorkerPayload forwards image files from app mentions", async ()
 				type: "event_callback",
 				event: {
 					user: "U123",
+					text: "<@UGLV> add OP13-003 to Jarren",
 					files: [
 						{
 							name: "OP13-003.jpg",
@@ -72,6 +74,8 @@ test("buildNotionWorkerPayload forwards image files from app mentions", async ()
 					},
 				],
 			},
+			ownerName: "Jarren",
+			filename: "OP13-003.jpg add OP13-003 to Jarren",
 			user_id: undefined,
 			response_url: undefined,
 		},
@@ -125,6 +129,13 @@ test("handleSlackRelayRequest responds to Slack URL verification", async () => {
 	);
 });
 
+test("inferOwnerNameFromText reads supported owner names", () => {
+	assert.equal(inferOwnerNameFromText("add to Spencer"), "Spencer");
+	assert.equal(inferOwnerNameFromText("for jarren please"), "Jarren");
+	assert.equal(inferOwnerNameFromText("waffle scan"), "Waffle");
+	assert.equal(inferOwnerNameFromText("unknown owner"), undefined);
+});
+
 test("handleSlackRelayRequest forwards Slack image payload to Notion worker", async () => {
 	let forwardedBody: unknown;
 	const response = await handleSlackRelayRequest({
@@ -132,6 +143,7 @@ test("handleSlackRelayRequest forwards Slack image payload to Notion worker", as
 			type: "event_callback",
 			event: {
 				user: "U123",
+				text: "<@UGLV> OP13-003 for Spencer",
 				files: [
 					{
 						name: "OP13-003.jpg",
@@ -164,5 +176,7 @@ test("handleSlackRelayRequest forwards Slack image payload to Notion worker", as
 				},
 			],
 		},
+		ownerName: "Spencer",
+		filename: "OP13-003.jpg OP13-003 for Spencer",
 	});
 });

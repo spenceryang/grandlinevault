@@ -18,6 +18,8 @@ type SlackEventEnvelope = {
 	challenge?: string;
 	event?: SlackEvent;
 	user_id?: string;
+	ownerName?: string;
+	filename?: string;
 	response_url?: string;
 };
 
@@ -149,6 +151,8 @@ export async function buildNotionWorkerPayload(
 			user: event.user,
 			files,
 		},
+		ownerName: inferOwnerNameFromText(event.text),
+		filename: buildRelayFilename(files[0], event.text),
 		user_id: payload.user_id,
 		response_url: payload.response_url,
 	};
@@ -193,6 +197,25 @@ function isImageSlackFile(file: SlackFile): boolean {
 		(!mimetype || mimetype.startsWith("image/")) &&
 		Boolean(file.url_private_download ?? file.url_private)
 	);
+}
+
+export function inferOwnerNameFromText(text: string | undefined): string | undefined {
+	const normalized = text?.toLowerCase() ?? "";
+	if (/\bspencer\b/.test(normalized)) return "Spencer";
+	if (/\bjarren\b/.test(normalized)) return "Jarren";
+	if (/\bwaffle\b/.test(normalized)) return "Waffle";
+	return undefined;
+}
+
+function buildRelayFilename(
+	file: SlackFile | undefined,
+	text: string | undefined,
+): string | undefined {
+	const filename = file?.name?.trim();
+	const commandText = text?.replace(/<@[^>]+>/g, "").trim();
+	if (!filename) return commandText;
+	if (!commandText) return filename;
+	return `${filename} ${commandText}`.slice(0, 180);
 }
 
 function firstHeader(
