@@ -1,5 +1,6 @@
 import * as Schema from "@notionhq/workers/schema";
 import { emojiIcon } from "@notionhq/workers/builder";
+import { MASTER_SET_DATABASE_KEY } from "./master-set-database.js";
 
 export const RELATED_CARDS_DATABASE_KEY = "relatedCards";
 
@@ -15,6 +16,13 @@ export const relatedCardsDatabaseConfig = {
 			"Source Card ID": Schema.richText(),
 			"Source Card Name": Schema.richText(),
 			"Related Card ID": Schema.richText(),
+			// P2 scaffolding: link source + related cards to Master Set via Variant ID. Sync wiring TBD.
+			"Source Card": Schema.relation(MASTER_SET_DATABASE_KEY, {
+				twoWay: false,
+			}),
+			"Related Card": Schema.relation(MASTER_SET_DATABASE_KEY, {
+				twoWay: false,
+			}),
 			"Related Card Image": Schema.url(),
 			Score: Schema.number(),
 			Reasons: Schema.multiSelect([

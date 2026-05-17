@@ -1,5 +1,6 @@
 import * as Schema from "@notionhq/workers/schema";
 import { emojiIcon } from "@notionhq/workers/builder";
+import { MASTER_SET_DATABASE_KEY } from "./master-set-database.js";
 
 export const WISHLIST_INSIGHTS_DATABASE_KEY = "wishlistInsights";
 
@@ -14,6 +15,10 @@ export const wishlistInsightsDatabaseConfig = {
 			"Insight ID": Schema.richText(),
 			Owner: Schema.richText(),
 			"Card ID": Schema.richText(),
+			// P2 scaffolding: link to Master Set via Variant ID. Sync wiring TBD.
+			"Master Set Card": Schema.relation(MASTER_SET_DATABASE_KEY, {
+				twoWay: false,
+			}),
 			Priority: Schema.select([
 				{ name: "High", color: "red" },
 				{ name: "Medium", color: "yellow" },
