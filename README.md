@@ -91,6 +91,8 @@ Two related databases (`Decks` + `Decklist Entries`) plus a validator that check
 ### Image galleries
 Every card-bearing database stores an image. Owned Card pages now also set the card image as the Notion page cover, so the **My Collection Wall** Gallery view can render like a digital binder instead of a table. A short [recipe](./docs/GALLERY_VIEWS.md) sets up consistent Gallery views across Card Catalog, Master Set, Luffy Index, Decklist Entries, and Owned Cards — including `Image-only Wall`, `My Collection Wall`, `Binder by Set`, and `Trophy Case`.
 
+For the Master Set specifically, the [binder setup guide](./BINDER.md) covers the gallery card-size pairing with the `BINDER_DENSITY` env var (small/medium/large), the three recommended view tabs (Binder / Owned Only / Missing), and the page-cover trick that makes card art fill the gallery cards.
+
 ### Pre-grade estimate
 When a scan includes both front and back, `estimatePreGrade` returns a likely PSA range (8–9, 9–10, etc.) plus a confidence level based on centering / corners / edges / surface signals. Framed deliberately as **pre-grade**, never an official grade.
 
@@ -131,6 +133,11 @@ The Worker provisions and populates a set of managed Notion databases that each 
 | **Archetype Completion** | `subTypeCompletion` | `src/notion/sub-type-completion-database.ts` | Per-sub-type completion % (Straw Hat Crew, Whitebeard Pirates, Marines, etc.) with progress bars |
 | **Price Movers** | `priceMovers` | `src/notion/price-movers-database.ts` | Daily/weekly gainers and losers diffed from `priceSnapshots` history |
 | **Trade Matches** | `tradeMatches` | `src/notion/trade-matches-database.ts` | Cross-user duplicate ↔ wishlist join, with priority and status tracking |
+| **Wishlist Insights** | `wishlistInsights` | `src/notion/wishlist-insights-database.ts` | Per-wishlist-card row with price target, current market, dollars/percent below target, and a `Target Hit` checkbox |
+| **Wishlist Budget** | `wishlistBudget` | `src/notion/wishlist-insights-database.ts` | Per-owner roll-up of total target spend, current spend, and savings-at-target |
+| **Duplicate Cards** | `duplicateCards` | `src/notion/duplicate-cards-database.ts` | Per-owner duplicate copies with Status chip (Keep / Trade / Sell / Gift), tradeable value, and counts |
+| **Duplicate Owner Summary** | `duplicateOwnerSummary` | `src/notion/duplicate-cards-database.ts` | Per-owner roll-up of duplicate copies and tradeable value |
+| **OPTCG Set Master Wall** | `optcgSetMasterWall` | `src/notion/optcg-set-master-wall-database.ts` | Per-set image wall with color art for owned cards and grayscale for missing — the literal binder wall view |
 | **Price Snapshots** | `priceSnapshots` | `src/index.ts` | Time-series price records per card; foundation for portfolio history |
 | **Scan Inbox** | user-created | `docs/NOTION_WORKSPACE_SETUP.md` | Upload front/back images, see status, link to the matched owned card |
 | **Owned Cards** | user-created | `docs/NOTION_WORKSPACE_SETUP.md` | The per-owner source of truth — quantity, condition, scan, pre-grade, current value |
@@ -138,15 +145,21 @@ The Worker provisions and populates a set of managed Notion databases that each 
 
 ### Template guides
 
+- [Binder setup](./BINDER.md) — gallery card size + `BINDER_DENSITY` env var + recommended view tabs (Binder / Owned Only / Missing)
 - [Luffy Index ETF](./docs/LUFFY_INDEX_ETF.md) — deep-dive + methodology
 - [Character indices](./docs/CHARACTER_INDICES.md) — Zoro / Sanji / Strawhat / Yonko / Donquixote indices on the same library
 - [Archetype completion](./docs/SUB_TYPE_COMPLETION.md) — per-sub-type completion % with curated dictionary
 - [Price movers](./docs/PRICE_MOVERS.md) — top gainers and losers over a rolling window
 - [Trade matcher](./docs/TRADE_MATCHER.md) — duplicate ↔ wishlist join across owners
+- [Wishlist insights](./docs/WISHLIST_INSIGHTS.md) — per-wishlist target tracking + budget roll-up
+- [Duplicate cards](./docs/DUPLICATE_CARDS.md) — duplicate tracking with Keep / Trade / Sell / Gift dispositions
 - [Decklist template](./docs/DECKLIST_TEMPLATE.md) — deck builder with recommended views (card list, image wall, cost curve, by color)
 - [Related cards scoring](./docs/RELATED_CARDS.md) — scoring weights + wiring snippet + future enhancements
+- [OPTCG Set Master Wall](./docs/OPTCG_SET_MASTER_WALL.md) — color/grayscale binder wall per set
+- [Share collection graphic](./docs/SHARE_COLLECTION_GRAPHIC.md) — 1200×630 OG/Twitter card SVG generator
+- [Twitter share graphic](./docs/TWITTER_SHARE_GRAPHIC.md) — Twitter-sized share card variant
+- [IG share story](./docs/IG_SHARE_STORY.md) — 1080×1920 vertical Instagram story variant
 - [Gallery views recipe](./docs/GALLERY_VIEWS.md) — how to flip any card database to image-first browsing
-- [Resend inbound scans](./docs/RESEND_INBOUND_SCANS.md) — email card photos to your inbox, get scan rows
 - [Notion workspace setup](./docs/NOTION_WORKSPACE_SETUP.md) — initial provisioning of the user-managed databases
 
 ## Current status
@@ -280,7 +293,10 @@ OPTCG_SET_IDS=OP-01,OP-02,OP-03,OP-04,OP-05,OP-06,OP-07,EB-01,OP-08,OP-09,OP-10,
 RECOGNITION_CONFIDENCE_THRESHOLD=0.82
 ENABLE_NOTION_AUTOMATIONS=0
 PRICECHARTING_API_TOKEN=
+BINDER_DENSITY=medium
 ```
+
+- `BINDER_DENSITY` controls the master-set sync's card-art resolution via the wsrv.nl proxy. `small` = 280px (tighter binder), `medium` (default) = 360px, `large` = 480px (showcase). See [BINDER.md](./BINDER.md) for the full toggle + view setup.
 
 6. Create/share the Notion databases from [the setup guide](./docs/NOTION_WORKSPACE_SETUP.md).
 7. Validate locally:
@@ -311,7 +327,13 @@ docs/
   TRADE_MATCHER.md            Cross-user duplicate ↔ wishlist matching
   DECKLIST_TEMPLATE.md        Deck builder template walkthrough
   RELATED_CARDS.md            Related-cards scoring engine
-  RESEND_INBOUND_SCANS.md     Email-as-intake for card scans
+  WISHLIST_INSIGHTS.md        Per-wishlist target tracking + budget roll-up
+  DUPLICATE_CARDS.md          Duplicate dispositions (Keep / Trade / Sell / Gift)
+  OPTCG_SET_MASTER_WALL.md    Color/grayscale binder wall per set
+  SHARE_COLLECTION_GRAPHIC.md OG/Twitter share card SVG generator
+  TWITTER_SHARE_GRAPHIC.md    Twitter-sized share card variant
+  IG_SHARE_STORY.md           Vertical Instagram-story share variant
+BINDER.md                     Master Set binder setup + BINDER_DENSITY env var
 GRAND_LINE_VAULT_SPEC.md      Product/team spec
 CHANGELOG.md                  Release notes
 ```
