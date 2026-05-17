@@ -46,6 +46,33 @@ Duplicate the auto-created Master Set view three times and configure each:
 - Add filter: `Owned` is not checked
 - Use this view to drive the wishlist
 
+**"Image Only" — pure grid, no text**
+- Duplicate "Binder"
+- View settings → Properties → **hide the title too** (the existing "Binder" view keeps the title visible; this one drops it)
+- Card preview: `Image`, Fit page cover: on
+- Card size: Small (or match `BINDER_DENSITY=small`) for the densest grid
+- No filter
+- Use this view for screenshots / IG-story exports and the "I just want to look at the binder" mode
+
+### Cards-per-row math
+
+Notion auto-flows gallery cards based on page width × card size. Quick reference for a Full-Width page on a typical 1440px desktop:
+
+| Card size | `BINDER_DENSITY` to match | Cards per row |
+|---|---|---|
+| Small | `small` (280px) | 6–7 |
+| Medium | `medium` (360px) | 4–5 |
+| Large | `large` (480px) | 2–3 |
+
+If you're seeing only 1–2 cards per row no matter what:
+
+| Cause | Fix |
+|---|---|
+| Page is not Full Width | Page `···` menu → Customize page → toggle Full Width on |
+| Card preview is showing Page content instead of the `Image` file property | View settings → Card preview → `Image` |
+| Fit page cover is off | View settings → Fit page cover → on |
+| `Image` property is `url`-typed, not `file`-typed | PR #53 + #64 switched these to `Schema.file()` — confirm those merged |
+
 ### Page-cover trick
 
 If the gallery doesn't render the card art:
