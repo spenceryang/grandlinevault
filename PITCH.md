@@ -62,7 +62,7 @@ Notion gives us free gallery views, board views, table views, and progress-bar r
 - **Set Completion Dashboard** — per-set progress + total + owned market value, daily refresh
 - **Archetype Completion** — per-sub-type (Straw Hat Crew, Whitebeard Pirates, Marines, etc.) progress, the orthogonal axis to set completion
 
-Every card-bearing database has an Image property so the Gallery view "just works" — instant card-wall browsing, zero schema changes.
+Every card-bearing database has an Image property so the Gallery view "just works" — instant card-wall browsing, zero schema changes. The Master Set ships with a `BINDER_DENSITY` env-var toggle (`small` / `medium` / `large`) that re-renders every card thumbnail at 280 / 360 / 480px via the wsrv.nl proxy, so you can flip the binder between "tight grid of every printing" and "showcase wall of hero cards" without leaving Notion. Three recommended views ship in [BINDER.md](./BINDER.md): **Binder** (all printings, unowned go grayscale), **Owned Only** (`Owned is checked` — the screenshot view), and **Missing** (`Owned is not checked` — the drives the wishlist).
 
 ### See what to chase next
 
