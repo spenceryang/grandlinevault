@@ -56,6 +56,43 @@ export async function processSlackCardImage(
 	};
 }
 
+export async function processInlineCardImage(
+	notion: Client,
+	input: {
+		imageBase64: string;
+		ownerName?: string | null;
+		filename?: string | null;
+		contentType?: string | null;
+	},
+): Promise<SlackCardIntakeResult> {
+	const ownerName = resolveSlackOwnerName({ ownerName: input.ownerName });
+	const contentType = input.contentType?.trim() || "image/jpeg";
+	const filename = input.filename?.trim() || "inline-card-scan.jpg";
+	const normalizedBase64 = input.imageBase64.includes(",")
+		? input.imageBase64.split(",").at(-1) ?? input.imageBase64
+		: input.imageBase64;
+	const bytes = Buffer.from(normalizedBase64, "base64");
+	if (bytes.length === 0) {
+		throw new Error("imageBase64 decoded to an empty image.");
+	}
+	const imageBlob = new Blob([bytes], { type: contentType });
+
+	const result = await processScanInboxImageBlob(notion, {
+		ownerName,
+		filename,
+		imageBlob,
+		contentType,
+		source: "Inline upload",
+	});
+
+	return {
+		...result,
+		ownerName,
+		filename,
+		slackReply: buildSlackCardIntakeReply(ownerName, result),
+	};
+}
+
 export function buildSlackCardIntakeReply(
 	ownerName: string,
 	result: ProcessScanInboxResult,

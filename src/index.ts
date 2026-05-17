@@ -60,6 +60,7 @@ import {
 import {
 	extractSlackCardIntakeInput,
 	postSlackResponse,
+	processInlineCardImage,
 	processSlackCardImage,
 } from "./lib/slack-intake.js";
 
@@ -124,85 +125,89 @@ const externalApiPacer = worker.pacer("externalApis", {
 	intervalMs: 1_000,
 });
 
-worker.sync("syncCardCatalog", {
-	database: cardCatalog,
-	mode: "replace",
-	schedule: "manual",
-	execute: async (state?: { page: number }) => {
-		const feedUrl = requireEnv(config.catalogFeedUrl, "CATALOG_FEED_URL");
-		const page = state?.page ?? 1;
-		await externalApiPacer.wait();
-		const { cards, hasMore } = await fetchEnglishCatalogPage(feedUrl, page);
+if (config.catalogFeedUrl) {
+	worker.sync("syncCardCatalog", {
+		database: cardCatalog,
+		mode: "replace",
+		schedule: "manual",
+		execute: async (state?: { page: number }) => {
+			const feedUrl = requireEnv(config.catalogFeedUrl, "CATALOG_FEED_URL");
+			const page = state?.page ?? 1;
+			await externalApiPacer.wait();
+			const { cards, hasMore } = await fetchEnglishCatalogPage(feedUrl, page);
 
-		return {
-			changes: cards.map((card) => ({
-				type: "upsert" as const,
-				key: card.cardId,
-				properties: {
-					Name: Builder.title(card.name),
-					"Card ID": Builder.richText(card.cardId),
-					"Set Code": Builder.richText(card.setCode),
-					"Set Name": Builder.richText(card.setName),
-					Variant: Builder.richText(card.variant),
-					Rarity: Builder.richText(card.rarity),
-					Color: Builder.richText(card.color),
-					"Card Type": Builder.richText(card.cardType),
-					Cost: Builder.number(card.cost ?? Number.NaN),
-					Power: Builder.number(card.power ?? Number.NaN),
-					Counter: Builder.number(card.counter ?? Number.NaN),
-					Effect: Builder.richText(card.effectText ?? ""),
-					Image: card.imageUrl ? Builder.file(card.imageUrl, card.name) : [],
-					"Source URL": Builder.url(card.sourceUrl ?? ""),
-					English: Builder.checkbox(true),
-				},
-				upstreamUpdatedAt: card.updatedAt,
-				pageContentMarkdown: [
-					`# ${card.name}`,
-					`**Card ID:** ${card.cardId}`,
-					`**Set:** ${card.setName} (${card.setCode})`,
-					`**Variant:** ${card.variant}`,
-					card.effectText ? `\n${card.effectText}` : "",
-				].join("\n"),
-			})),
-			hasMore,
-			nextState: hasMore ? { page: page + 1 } : undefined,
-		};
-	},
-});
-
-worker.sync("syncPriceSnapshots", {
-	database: priceSnapshots,
-	mode: "incremental",
-	schedule: "1d",
-	execute: async (state?: { page: number }) => {
-		const feedUrl = requireEnv(config.priceFeedUrl, "PRICE_FEED_URL");
-		const page = state?.page ?? 1;
-		await externalApiPacer.wait();
-		const { snapshots, hasMore } = await fetchPriceSnapshots(feedUrl, page);
-
-		return {
-			changes: snapshots.map((snapshot) => {
-				const snapshotId = `${snapshot.cardId}:${snapshot.capturedAt}`;
-				return {
+			return {
+				changes: cards.map((card) => ({
 					type: "upsert" as const,
-					key: snapshotId,
+					key: card.cardId,
 					properties: {
-						Name: Builder.title(`${snapshot.cardId} · ${snapshot.capturedAt}`),
-						"Snapshot ID": Builder.richText(snapshotId),
-						"Card ID": Builder.richText(snapshot.cardId),
-						"Market Price": Builder.number(snapshot.marketPrice),
-						"Low Price": Builder.number(snapshot.lowPrice ?? Number.NaN),
-						Currency: Builder.richText(snapshot.currency),
-						Source: Builder.richText(snapshot.source),
-						"Captured At": Builder.date(snapshot.capturedAt.slice(0, 10)),
+						Name: Builder.title(card.name),
+						"Card ID": Builder.richText(card.cardId),
+						"Set Code": Builder.richText(card.setCode),
+						"Set Name": Builder.richText(card.setName),
+						Variant: Builder.richText(card.variant),
+						Rarity: Builder.richText(card.rarity),
+						Color: Builder.richText(card.color),
+						"Card Type": Builder.richText(card.cardType),
+						Cost: Builder.number(card.cost ?? Number.NaN),
+						Power: Builder.number(card.power ?? Number.NaN),
+						Counter: Builder.number(card.counter ?? Number.NaN),
+						Effect: Builder.richText(card.effectText ?? ""),
+						Image: card.imageUrl ? Builder.file(card.imageUrl, card.name) : [],
+						"Source URL": Builder.url(card.sourceUrl ?? ""),
+						English: Builder.checkbox(true),
 					},
-				};
-			}),
-			hasMore,
-			nextState: hasMore ? { page: page + 1 } : undefined,
-		};
-	},
-});
+					upstreamUpdatedAt: card.updatedAt,
+					pageContentMarkdown: [
+						`# ${card.name}`,
+						`**Card ID:** ${card.cardId}`,
+						`**Set:** ${card.setName} (${card.setCode})`,
+						`**Variant:** ${card.variant}`,
+						card.effectText ? `\n${card.effectText}` : "",
+					].join("\n"),
+				})),
+				hasMore,
+				nextState: hasMore ? { page: page + 1 } : undefined,
+			};
+		},
+	});
+}
+
+if (config.priceFeedUrl) {
+	worker.sync("syncPriceSnapshots", {
+		database: priceSnapshots,
+		mode: "incremental",
+		schedule: "1d",
+		execute: async (state?: { page: number }) => {
+			const feedUrl = requireEnv(config.priceFeedUrl, "PRICE_FEED_URL");
+			const page = state?.page ?? 1;
+			await externalApiPacer.wait();
+			const { snapshots, hasMore } = await fetchPriceSnapshots(feedUrl, page);
+
+			return {
+				changes: snapshots.map((snapshot) => {
+					const snapshotId = `${snapshot.cardId}:${snapshot.capturedAt}`;
+					return {
+						type: "upsert" as const,
+						key: snapshotId,
+						properties: {
+							Name: Builder.title(`${snapshot.cardId} · ${snapshot.capturedAt}`),
+							"Snapshot ID": Builder.richText(snapshotId),
+							"Card ID": Builder.richText(snapshot.cardId),
+							"Market Price": Builder.number(snapshot.marketPrice),
+							"Low Price": Builder.number(snapshot.lowPrice ?? Number.NaN),
+							Currency: Builder.richText(snapshot.currency),
+							Source: Builder.richText(snapshot.source),
+							"Captured At": Builder.date(snapshot.capturedAt.slice(0, 10)),
+						},
+					};
+				}),
+				hasMore,
+				nextState: hasMore ? { page: page + 1 } : undefined,
+			};
+		},
+	});
+}
 
 worker.sync("syncOptcgCardCatalog", {
 	database: cardCatalog,
@@ -519,6 +524,26 @@ worker.tool("processSlackCardImage", {
 			ownerName,
 			slackUserId,
 			filename,
+		});
+	},
+});
+
+worker.tool("processInlineCardImage", {
+	title: "Process Inline Card Image",
+	description:
+		"Take a base64 image payload, add it to Scan Inbox, recognize/enrich the English One Piece card, and create the owned-card row. Use this when Slack or local image URLs are private.",
+	schema: j.object({
+		imageBase64: j.string().describe("Base64-encoded image bytes, with or without a data: URL prefix."),
+		ownerName: j.string().nullable().describe("Optional explicit owner name, e.g. Spencer, Jarren, or Waffle."),
+		filename: j.string().nullable().describe("Original filename."),
+		contentType: j.string().nullable().describe("Image MIME type, e.g. image/jpeg."),
+	}),
+	execute: async ({ imageBase64, ownerName, filename, contentType }, context) => {
+		return processInlineCardImage(context.notion, {
+			imageBase64,
+			ownerName,
+			filename,
+			contentType,
 		});
 	},
 });

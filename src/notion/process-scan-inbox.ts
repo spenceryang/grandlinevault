@@ -20,11 +20,27 @@ type FileEntry = {
 	type?: "external" | "file";
 	external?: { url?: string };
 	file?: { url?: string };
+	name?: string;
+};
+
+export type BlockEntry = {
+	id?: string;
+	type?: string;
+	has_children?: boolean;
+	image?: FileEntry;
+	file?: FileEntry;
+	pdf?: FileEntry;
+	video?: FileEntry;
 };
 
 type RichTextEntry = {
 	plain_text?: string;
 	text?: { content?: string };
+};
+
+type FileReference = {
+	url: string;
+	name?: string;
 };
 
 type ScanInboxStatus = "Processing" | "Matched" | "Needs Review" | "Rejected";
@@ -36,6 +52,7 @@ export type ProcessScanInboxResult = {
 	scanInboxUrl?: string;
 	ownedCardPageId?: string;
 	ownedCardUrl?: string;
+	frontImageUrl?: string;
 };
 
 type CreateScanInboxPageInput = {
@@ -136,17 +153,39 @@ export async function processScanInboxPage(
 	notion: Client,
 	pageData: PageData,
 ): Promise<ProcessScanInboxResult> {
-	const frontImageUrl = extractFirstFileUrl(pageData.properties, [
-		"Front image",
-		"Image",
-		"Scan image",
-	]);
+	const frontImageRef =
+		extractFirstFileReference(pageData.properties, [
+			"Front image",
+			"Image",
+			"Scan image",
+		]) ?? (await extractFirstPageBodyImageReference(notion, pageData.id));
 	const ownerName =
 		extractRichText(pageData.properties.Owner) ||
 		extractTitle(pageData.properties.Name) ||
 		"Spencer";
+	const fallbackCardId = extractCardIdFromText(
+		[
+			extractTitle(pageData.properties.Name),
+			extractRichText(pageData.properties.Notes),
+			extractRichText(pageData.properties["Recognition result"]),
+			frontImageRef?.name,
+			frontImageRef?.url,
+		]
+			.filter(Boolean)
+			.join(" "),
+	);
 
-	if (!frontImageUrl) {
+	if (!frontImageRef) {
+		if (fallbackCardId) {
+			return completeRecognizedScan(notion, {
+				pageId: pageData.id,
+				pageUrl: pageData.url,
+				ownerName,
+				archiveImageUrl: null,
+				recognition: recognitionFromExplicitCardId(fallbackCardId),
+			});
+		}
+
 		const result = {
 			status: "Needs Review" as const,
 			message: "No Front image file was found on this Scan Inbox row.",
@@ -161,15 +200,28 @@ export async function processScanInboxPage(
 	});
 
 	try {
-		const recognition = await recognizeCardFromImageUrl(frontImageUrl);
+		const recognition = applyExplicitCardIdFallback(
+			await recognizeCardFromImageUrl(frontImageRef.url),
+			fallbackCardId,
+		);
 		return completeRecognizedScan(notion, {
 			pageId: pageData.id,
 			pageUrl: pageData.url,
 			ownerName,
-			archiveImageUrl: frontImageUrl,
+			archiveImageUrl: frontImageRef.url,
 			recognition,
 		});
 	} catch (error) {
+		if (fallbackCardId) {
+			return completeRecognizedScan(notion, {
+				pageId: pageData.id,
+				pageUrl: pageData.url,
+				ownerName,
+				archiveImageUrl: frontImageRef.url,
+				recognition: recognitionFromExplicitCardId(fallbackCardId),
+			});
+		}
+
 		const result = {
 			status: "Needs Review" as const,
 			message: `Scan processing failed: ${error instanceof Error ? error.message : String(error)}`,
@@ -234,11 +286,15 @@ export async function processScanInboxImageBlob(
 		status: "Processing",
 		message: "Recognizing Slack card image…",
 	});
+	const fallbackCardId = extractCardIdFromText(input.filename);
 
 	try {
-		const recognition = await recognizeCardFromImageBlob(
-			input.imageBlob,
-			input.filename,
+		const recognition = applyExplicitCardIdFallback(
+			await recognizeCardFromImageBlob(
+				input.imageBlob,
+				input.filename,
+			),
+			fallbackCardId,
 		);
 		return completeRecognizedScan(notion, {
 			pageId: page.id,
@@ -248,6 +304,16 @@ export async function processScanInboxImageBlob(
 			recognition,
 		});
 	} catch (error) {
+		if (fallbackCardId) {
+			return completeRecognizedScan(notion, {
+				pageId: page.id,
+				pageUrl: page.url,
+				ownerName: input.ownerName,
+				archiveImageUrl: input.externalImageUrl ?? null,
+				recognition: recognitionFromExplicitCardId(fallbackCardId),
+			});
+		}
+
 		const result = {
 			status: "Needs Review" as const,
 			message: `Slack scan processing failed: ${error instanceof Error ? error.message : String(error)}`,
@@ -330,6 +396,7 @@ async function completeRecognizedScan(
 		scanInboxUrl: pageUrl,
 		ownedCardPageId: ownedCard.pageId,
 		ownedCardUrl: ownedCard.url,
+		frontImageUrl: variant.imageUrl || undefined,
 	};
 	await updateScanInboxResult(notion, pageId, result);
 	return result;
@@ -376,13 +443,95 @@ export function extractFirstFileUrl(
 	properties: Record<string, unknown>,
 	propertyNames: string[],
 ): string | null {
+	return extractFirstFileReference(properties, propertyNames)?.url ?? null;
+}
+
+export function extractFirstFileReference(
+	properties: Record<string, unknown>,
+	propertyNames: string[],
+): FileReference | null {
 	for (const propertyName of propertyNames) {
 		const property = properties[propertyName] as { files?: FileEntry[] } | undefined;
 		const file = property?.files?.[0];
 		const url = file?.external?.url ?? file?.file?.url;
-		if (url) return url;
+		if (url) return { url, name: file?.name };
 	}
 	return null;
+}
+
+async function extractFirstPageBodyImageReference(
+	notion: Client,
+	blockId: string,
+	depth = 0,
+): Promise<FileReference | null> {
+	if (depth > 2) return null;
+
+	const children = await notion.blocks.children.list({
+		block_id: blockId,
+		page_size: 100,
+	});
+	const blocks = children.results as BlockEntry[];
+	const directRef = extractFirstBlockImageReference(blocks);
+	if (directRef) return directRef;
+
+	for (const block of blocks) {
+		if (!block.has_children || !block.id) continue;
+		const nestedRef = await extractFirstPageBodyImageReference(
+			notion,
+			block.id,
+			depth + 1,
+		);
+		if (nestedRef) return nestedRef;
+	}
+
+	return null;
+}
+
+export function extractFirstBlockImageUrl(blocks: BlockEntry[]): string | null {
+	return extractFirstBlockImageReference(blocks)?.url ?? null;
+}
+
+export function extractFirstBlockImageReference(blocks: BlockEntry[]): FileReference | null {
+	for (const block of blocks) {
+		const media =
+			block.image ??
+			block.file ??
+			block.pdf ??
+			block.video;
+		const url = media?.external?.url ?? media?.file?.url;
+		if (url) return { url, name: media?.name };
+	}
+
+	return null;
+}
+
+export function extractCardIdFromText(text: string | null | undefined): string | null {
+	const raw = text?.match(/\b(?:OP|ST|EB|P)-?\d{2,3}-\d{3}(?:_p\d+)?\b/i)?.[0];
+	if (!raw) return null;
+
+	return raw
+		.toUpperCase()
+		.replace(/^(OP|ST|EB)-(\d{2,3})-/, "$1$2-");
+}
+
+function applyExplicitCardIdFallback(
+	recognition: RecognitionResult,
+	cardId: string | null,
+): RecognitionResult {
+	if (recognition.status === "matched" || !cardId) return recognition;
+	return recognitionFromExplicitCardId(cardId);
+}
+
+function recognitionFromExplicitCardId(cardId: string): RecognitionResult {
+	return {
+		status: "matched",
+		candidate: {
+			cardId,
+			name: cardId,
+			confidence: 0.99,
+			language: "English",
+		},
+	};
 }
 
 export function extractRichText(property: unknown): string | null {
@@ -428,16 +577,31 @@ async function updateScanInboxResult(
 		message: string;
 		confidence?: number;
 		ownedCardUrl?: string;
+		frontImageUrl?: string;
 	},
 ): Promise<void> {
+	const properties: Record<string, unknown> = {
+		Status: { select: { name: result.status } },
+		"Recognition result": richTextProperty(result.message),
+		Confidence: { number: result.confidence ?? null },
+		"Linked owned card": { url: result.ownedCardUrl ?? null },
+	};
+
+	if (result.frontImageUrl) {
+		properties["Front image"] = {
+			files: [
+				{
+					name: "Recognized card image",
+					type: "external",
+					external: { url: result.frontImageUrl },
+				},
+			],
+		};
+	}
+
 	await notion.pages.update({
 		page_id: pageId,
-		properties: {
-			Status: { select: { name: result.status } },
-			"Recognition result": richTextProperty(result.message),
-			Confidence: { number: result.confidence ?? null },
-			"Linked owned card": { url: result.ownedCardUrl ?? null },
-		},
+		properties: properties as Parameters<Client["pages"]["update"]>[0]["properties"],
 	});
 }
 
