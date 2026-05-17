@@ -23,7 +23,6 @@ import { fetchOwnedCards } from "./notion/read-owned-cards.js";
 import {
 	processLatestScan,
 	processScanInboxPage,
-	processScanInboxQueue,
 	whatDidIJustScan,
 } from "./notion/process-scan-inbox.js";
 import { createOwnedCardPage } from "./notion/write-owned-card.js";
@@ -496,18 +495,6 @@ worker.tool("processScanInboxPage", {
 	},
 });
 
-worker.tool("processScanInboxQueue", {
-	title: "Batch Process Scan Inbox Queue",
-	description:
-		"Batch admin tool. Only use when the user explicitly asks to process the queue, process all pending scans, or batch multiple Scan Inbox rows. Do not use for the normal 'handle new scan' command, and do not call this after Handle New Scan.",
-	schema: j.object({
-		limit: j.number(),
-	}),
-	execute: async ({ limit }, context) => {
-		return processScanInboxQueue(context.notion, limit);
-	},
-});
-
 worker.tool("processSlackCardImage", {
 	title: "Process Slack Card Image",
 	description:
@@ -581,7 +568,12 @@ worker.tool("handleNewScan", {
 		"Primary agent command for 'handle new scan'. Process exactly one most-recent Scan Inbox row with Status = New, create the owned-card record when matched, update the Scan Inbox result, then stop. Do not call Batch Process Scan Inbox Queue after this tool.",
 	schema: j.object({}),
 	execute: async (_input, context) => {
-		return processLatestScan(context.notion);
+		const result = await processLatestScan(context.notion);
+		return {
+			...result,
+			agentInstruction:
+				"Stop after this tool call. Do not call any other scan-processing tool. Report this result to the user as the final scan outcome.",
+		};
 	},
 });
 

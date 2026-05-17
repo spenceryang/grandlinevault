@@ -42,7 +42,7 @@ Create these properties exactly:
 Current fallback flow:
 
 ```text
-Upload Front image → keep Status = New → ask the Agent to run handleNewScan or processScanInboxQueue
+Upload Front image → keep Status = New → ask the Agent to run handleNewScan
 ```
 
 When Worker automation capabilities are enabled for the workspace, set `ENABLE_NOTION_AUTOMATIONS=1`, redeploy, and create this Notion database automation:
@@ -128,7 +128,7 @@ For `Image-only Wall`, hide every property so only the card images remain. For t
 
 1. Create a Scan Inbox row.
 2. Upload an English One Piece card-front image to `Front image`.
-3. Ask Vault Quartermaster / Notion Agent to process the latest scan. If needed, use `handleNewScan` for one row or `processScanInboxQueue` for a batch.
+3. Ask Vault Quartermaster / Notion Agent to process the latest scan. If needed, use `handleNewScan` for one row.
 4. Ask from Slack: `what card did I just scan?`
 5. Ask from Slack: `show my OP-01 cards`, then follow up with `which is the most expensive?`
 6. Open `Image-only Wall` first for the visual binder moment, then `Trophy Case` and the Set Completion Dashboard for value/progress context.

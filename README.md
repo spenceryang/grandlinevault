@@ -219,7 +219,7 @@ The Worker provisions and populates a set of managed Notion databases that each 
 - Gallery, set-completion, owner, duplicate, wishlist, and portfolio-style views in Notion.
 - OpenAI vision recognition for the scan path.
 - Slack image intake tool: download Slack image, add it to Scan Inbox, process it, and classify it into Owned Cards.
-- Scan Inbox upload path: upload a `Front image`, then run `handleNewScan` for a one-card demo or `processScanInboxQueue` for a batch to recognize/enrich the card and create an owned-card record. The true `processScanInboxUpload` Notion automation is coded but gated until the workspace has Worker automations enabled.
+- Scan Inbox upload path: upload a `Front image`, then run `handleNewScan` for a one-card demo to recognize/enrich the card and create an owned-card record. The true `processScanInboxUpload` Notion automation is coded but gated until the workspace has Worker automations enabled.
 - English-only recognition guardrails.
 - OPTCG API card, set, starter-deck, promo, DON!!, price, and image-fetch helpers.
 - Offline OP15-EB04 seed data for resilient demos when the live image/card API is unavailable.
@@ -240,7 +240,7 @@ The Worker provisions and populates a set of managed Notion databases that each 
 
 ### Still intentionally open
 
-- True upload-trigger automation is blocked until Notion enables Worker automation capabilities for the workspace. Current fallback: upload image, keep Status = `New`, then run `processScanInboxQueue`.
+- True upload-trigger automation is blocked until Notion enables Worker automation capabilities for the workspace. Current fallback: upload image, keep Status = `New`, then ask Vault Quartermaster to `handle new scan`.
 - Portfolio history currently uses snapshots and collection fields; true gain/loss over time needs recurring price snapshots plus a charting view.
 - Buying flow is P2 and should start as marketplace outbound links, not checkout.
 - Rarity-breakdown and top-cards analytics templates exist but their syncs are not yet wired.
@@ -302,7 +302,6 @@ The battle simulator is deployed as a separate Notion Worker using `workers.op-b
 - `identifyCard`
 - `identifyAndEnrichCard`
 - `processScanInboxPage`
-- `processScanInboxQueue`
 - `handleNewScan`
 - `processSlackCardImage`
 - `whatDidIJustScan`
