@@ -45,7 +45,7 @@ Adding a new intake method is a one-screen contract: accept an image + an owner 
 
 After a Scan Inbox row lands, the Worker does the boring work:
 
-1. **Recognize** the card image (GIBL recognition + English-only filter so foreign-language and low-confidence scans get queued for review rather than silently polluting the collection).
+1. **Recognize** the card image (OpenAI vision recognition + English-only filter so foreign-language and low-confidence scans get queued for review rather than silently polluting the collection).
 2. **Enrich** with canonical data from the OPTCG API — name, set, rarity, color, type, cost, power, counter, attribute, art, current market price.
 3. **Store** the enriched record in the user's Owned Cards database with quantity, condition, pre-grade estimate, and scan provenance.
 
@@ -109,7 +109,7 @@ The Worker is the brain; Notion is the body.
 
 ## What's shipped (as of this writing)
 
-- Recognition + enrichment pipeline (GIBL + OPTCG)
+- Recognition + enrichment pipeline (OpenAI vision + OPTCG)
 - Owned Cards, Wishlists, Scan Inbox, Card Catalog, Price Snapshots, Master Set, Set Completion Dashboard
 - Luffy Index ETF + Character Indices (Zoro, Sanji, Strawhat, Yonko, Donquixote)
 - Decklist template (card list + image gallery views, OPTCG validator)

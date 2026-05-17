@@ -45,7 +45,7 @@ test("rejects non-English cards", () => {
 	assert.equal(result.status, "rejected");
 });
 
-test("normalizes GIBL identity/card-details fields", () => {
+test("normalizes provider identity/card-details fields", () => {
 	assert.deepEqual(
 		normalizeRecognitionCandidate({
 			card_identity: "OP05-119",

@@ -146,7 +146,7 @@ Use these rules in the Notion Custom Agent connected to Slack:
 
 ## Slack image intake
 
-Vault Quartermaster can process an image that starts in Slack, but Slack-hosted file URLs are private. Configure a Slack bot token so the Worker can download the file bytes before sending them to GIBL.
+Vault Quartermaster can process an image that starts in Slack, but Slack-hosted file URLs are private. Configure a Slack bot token so the Worker can download the file bytes before sending them through OpenAI vision.
 
 Required deployed Worker env vars:
 

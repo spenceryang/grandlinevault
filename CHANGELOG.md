@@ -70,7 +70,7 @@ Grand Line Vault now has a public repo, a deployed Notion Worker, and a live Not
 
 Provide these Worker environment variables:
 
-- `GIBL_API_KEY`
+- `OPENAI_API_KEY`
 - `CATALOG_FEED_URL`
 - `PRICE_FEED_URL`
 

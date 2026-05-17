@@ -61,14 +61,14 @@ Agent behavior rules for the demo:
 ## Features
 
 ### Scan and recognize
-Upload a card photo to the Scan Inbox, or send a card image to Vault Quartermaster from Slack. The Worker calls GIBL first, classifies confidence + language, and only auto-matches English cards. If GIBL cannot return a usable card identity, an optional OpenAI vision fallback (`OPENAI_API_KEY`) can read the visible card number/name before canonicalizing through OPTCG. Low-confidence and non-English scans land in a review queue rather than polluting the collection. Front-only scans work; front+back enables a richer pre-grade estimate.
+Upload a card photo to the Scan Inbox, or send a card image to Vault Quartermaster from Slack. The Worker uses OpenAI vision (`OPENAI_API_KEY`) to read the visible card number/name, classifies confidence + language, and only auto-matches English cards before canonicalizing through OPTCG. Low-confidence and non-English scans land in a review queue rather than polluting the collection. Front-only scans work; front+back enables a richer pre-grade estimate.
 
 ### Enrich from OPTCG live data
 On a confident match, the Worker pulls canonical card data from the OPTCG API (`getCardDetails`, `getSetCards`, `filterCatalogCards`, plus starter-deck / promo / DON variants) — name, set, rarity, color, type, cost, power, counter, attribute, art, market price. The same library powers offline demo mode using a bundled OP15-EB04 seed.
 
 
 ### Slack image intake
-Vault Quartermaster can now process a Slack card image instead of requiring the user to manually upload into Notion first. The `processSlackCardImage` tool downloads the Slack file with `SLACK_BOT_TOKEN`, uploads the image into Scan Inbox through Notion File Uploads, runs the existing GIBL + OPTCG processor, creates the Owned Card row, and returns a Slack-ready reply with the result and Notion links.
+Vault Quartermaster can now process a Slack card image instead of requiring the user to manually upload into Notion first. The `processSlackCardImage` tool downloads the Slack file with `SLACK_BOT_TOKEN`, uploads the image into Scan Inbox through Notion File Uploads, runs the existing OpenAI vision + OPTCG processor, creates the Owned Card row, and returns a Slack-ready reply with the result and Notion links.
 
 There is also a production Slack relay at `api/slack-relay.ts`. Slack Events API calls the relay, the relay handles Slack URL verification and forwards image file payloads to the Notion Worker webhook `slackCardIntake`.
 
@@ -217,7 +217,7 @@ The Worker provisions and populates a set of managed Notion databases that each 
 - Slack-connected Notion Agent flow: ask Vault Quartermaster questions like `show my OP-01 cards` or `what card did I just scan`, and it answers from the Grand Line Vault Notion data.
 - Scan Inbox, Owned Cards, Wishlists, and Master Set databases.
 - Gallery, set-completion, owner, duplicate, wishlist, and portfolio-style views in Notion.
-- GIBL image-recognition integration for the scan path.
+- OpenAI vision recognition for the scan path.
 - Slack image intake tool: download Slack image, add it to Scan Inbox, process it, and classify it into Owned Cards.
 - Scan Inbox upload path: upload a `Front image`, then run `processLatestScan` for a one-card demo or `processScanInboxQueue` for a batch to recognize/enrich the card and create an owned-card record. The true `processScanInboxUpload` Notion automation is coded but gated until the workspace has Worker automations enabled.
 - English-only recognition guardrails.
@@ -252,7 +252,7 @@ flowchart LR
     S["Slack collector questions"] --> A["Notion Agent / Grand Line Vault pages"]
     A --> B["Grand Line Vault Worker"]
     A --> OB["OP Battle Worker"]
-    B --> C["GIBL recognition"]
+    B --> C["OpenAI vision recognition"]
     B --> D["OPTCG API"]
     B --> E["Owned Cards DB"]
     B --> F["Wishlists DB"]
@@ -343,13 +343,12 @@ OWNED_CARDS_DATA_SOURCE_ID=
 WISHLISTS_DATA_SOURCE_ID=
 BATTLE_DECKS_DATA_SOURCE_ID=
 BATTLE_RUNS_DATA_SOURCE_ID=
-GIBL_API_KEY=
+OPENAI_API_KEY=
 ```
 
 5. Optional values:
 
 ```text
-GIBL_GAME_TYPE=one-piece
 CATALOG_FEED_URL=
 PRICE_FEED_URL=
 OPTCG_SET_IDS=OP-01,OP-02,OP-03,OP-04,OP-05,OP-06,OP-07,EB-01,OP-08,OP-09,OP-10,OP-11,EB-02,OP-12,PRB-01,PRB-02,OP-13,OP14-EB04,EB-03,OP15-EB04
@@ -359,6 +358,7 @@ PRICECHARTING_API_TOKEN=
 SLACK_BOT_TOKEN=
 SLACK_OWNER_MAP=U_SLACK_SPENCER:Spencer,U_SLACK_JARREN:Jarren,U_SLACK_WAFFLE:Waffle
 BINDER_DENSITY=medium
+OPENAI_VISION_MODEL=gpt-4.1-mini
 ```
 
 - `BINDER_DENSITY` controls the master-set sync's card-art resolution via the wsrv.nl proxy. `small` = 280px (tighter binder), `medium` (default) = 360px, `large` = 480px (showcase). See [BINDER.md](./BINDER.md) for the full toggle + view setup.
@@ -409,6 +409,6 @@ CHANGELOG.md                  Release notes
 
 - Automated grading is a **pre-grade estimate**, not an official PSA grade.
 - English-only matching is deliberate for the P0 collection loop.
-- Generic catalog/price feeds remain available, but the live One Piece path uses OPTCG API plus GIBL.
+- Generic catalog/price feeds remain available, but the live One Piece path uses OPTCG API plus OpenAI vision.
 - Slack image intake requires a Slack bot token with file-read access if the image URL is Slack-private.
 - PriceCharting and Pokémon TCGdex providers are merged expansion rails, but the live Notion demo remains One Piece-first unless those providers are explicitly wired into Worker tools and Notion databases.

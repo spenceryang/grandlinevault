@@ -19,34 +19,6 @@ type RawRecognitionCandidate = {
 	image?: string;
 };
 
-type GiblCardDetails = RawRecognitionCandidate & {
-	data?: RawRecognitionCandidate;
-	card?: RawRecognitionCandidate;
-};
-
-type GiblVisionItem = {
-	card?: {
-		type?: { label?: string; confidence?: number };
-		identity?: {
-			best?: {
-				label?: string | number;
-				confidence?: number;
-				match?: {
-					id?: string | number;
-					cardId?: string;
-					card_id?: string;
-					name?: string;
-					card_name?: string;
-					number?: string;
-					printedTotal?: string;
-					image_url?: string;
-					imageUrl?: string;
-				};
-			};
-		};
-	};
-};
-
 type OpenAiVisionCardResult = {
 	isOnePieceCard?: boolean;
 	isEnglish?: boolean;
@@ -72,75 +44,7 @@ export async function recognizeCardFromImageBlob(
 	imageBlob: Blob,
 	filename = "scan.jpg",
 ): Promise<RecognitionResult> {
-	const giblResult = await recognizeCardFromImageBlobWithGibl(imageBlob, filename);
-	if (giblResult.status === "matched" || !config.openaiApiKey) {
-		return giblResult;
-	}
-
-	if (giblResult.status === "rejected") {
-		return giblResult;
-	}
-
-	try {
-		const openAiResult = await recognizeCardFromImageBlobWithOpenAi(
-			imageBlob,
-			filename,
-		);
-		if (openAiResult.status === "matched") return openAiResult;
-	} catch (error) {
-		return {
-			...giblResult,
-			reason: `${giblResult.reason} OpenAI vision fallback failed: ${error instanceof Error ? error.message : String(error)}`,
-		};
-	}
-
-	return giblResult;
-}
-
-async function recognizeCardFromImageBlobWithGibl(
-	imageBlob: Blob,
-	filename = "scan.jpg",
-): Promise<RecognitionResult> {
-	const apiKey = requireEnv(config.giblApiKey, "GIBL_API_KEY");
-
-	const body = new FormData();
-	body.append("file", imageBlob, filename);
-
-	const response = await fetch(
-		`https://gibltcg.com/api/v1/predict-card?key=${encodeURIComponent(apiKey)}`,
-		{
-			method: "POST",
-			body,
-		},
-	);
-
-	if (!response.ok) {
-		throw new Error(`Recognition request failed with ${response.status}.`);
-	}
-
-	const payload = (await response.json()) as {
-		data?: RawRecognitionCandidate[] | RawRecognitionCandidate;
-		candidates?: RawRecognitionCandidate[];
-		identity?: RawRecognitionCandidate[];
-		items?: GiblVisionItem[];
-	};
-
-	const rawCandidates = Array.isArray(payload.items)
-		? payload.items.map(toCandidateFromGiblVisionItem).filter((candidate): candidate is RawRecognitionCandidate => Boolean(candidate))
-		: Array.isArray(payload.identity)
-		? await hydrateGiblIdentityCandidates(payload.identity, apiKey)
-		: Array.isArray(payload.data)
-		? payload.data
-		: payload.data
-			? [payload.data]
-			: payload.candidates ?? [];
-
-	const candidates = rawCandidates
-		.map(normalizeRecognitionCandidate)
-		.filter((candidate): candidate is RecognitionCandidate => Boolean(candidate))
-		.sort((a, b) => b.confidence - a.confidence);
-
-	return classifyRecognition(candidates);
+	return recognizeCardFromImageBlobWithOpenAi(imageBlob, filename);
 }
 
 async function recognizeCardFromImageBlobWithOpenAi(
@@ -180,7 +84,8 @@ async function recognizeCardFromImageBlobWithOpenAi(
 							isEnglish: { type: "boolean" },
 							cardId: {
 								type: ["string", "null"],
-								description: "Visible One Piece card number, e.g. OP13-003 or ST02-009.",
+								description:
+									"Visible One Piece card number, e.g. OP13-003 or ST02-009.",
 							},
 							name: {
 								type: ["string", "null"],
@@ -188,7 +93,8 @@ async function recognizeCardFromImageBlobWithOpenAi(
 							},
 							confidence: {
 								type: "number",
-								description: "0 to 1 confidence that cardId and name were read correctly.",
+								description:
+									"0 to 1 confidence that cardId and name were read correctly.",
 							},
 							reason: { type: ["string", "null"] },
 						},
@@ -238,29 +144,6 @@ export function normalizeRecognitionCandidate(
 		),
 		language,
 		imageUrl: candidate.imageUrl ?? candidate.image_url ?? candidate.image,
-	};
-}
-
-function toCandidateFromGiblVisionItem(
-	item: GiblVisionItem,
-): RawRecognitionCandidate | null {
-	const best = item.card?.identity?.best;
-	const match = best?.match;
-	const name = match?.name ?? match?.card_name;
-	if (!best || !match || !name) return null;
-
-	return {
-		cardId: String(
-			match.cardId ??
-				match.card_id ??
-				match.id ??
-				match.number ??
-				best.label ??
-				"",
-		),
-		name,
-		confidence: best.confidence,
-		imageUrl: match.imageUrl ?? match.image_url,
 	};
 }
 
@@ -385,35 +268,6 @@ function contentTypeFromFilename(filename: string): string {
 	if (normalized.endsWith(".webp")) return "image/webp";
 	if (normalized.endsWith(".heic")) return "image/heic";
 	return "image/jpeg";
-}
-
-async function hydrateGiblIdentityCandidates(
-	identities: RawRecognitionCandidate[],
-	apiKey: string,
-): Promise<RawRecognitionCandidate[]> {
-	return Promise.all(
-		identities.map(async (identity) => {
-			const cardIdentity = identity.card_identity ?? identity.cardId ?? identity.id;
-			if (!cardIdentity) return identity;
-
-			try {
-				const response = await fetch(
-					`https://gibltcg.com/api/v1/card-details/${encodeURIComponent(cardIdentity)}?key=${encodeURIComponent(apiKey)}`,
-				);
-				if (!response.ok) return identity;
-				const detailsPayload = (await response.json()) as GiblCardDetails;
-				const details = detailsPayload.data ?? detailsPayload.card ?? detailsPayload;
-				return {
-					...details,
-					card_identity: cardIdentity,
-					card_identity_confidence: identity.card_identity_confidence,
-					confidence: identity.confidence ?? identity.card_identity_confidence,
-				};
-			} catch {
-				return identity;
-			}
-		}),
-	);
 }
 
 function normalizeLanguage(
