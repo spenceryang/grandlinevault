@@ -7,6 +7,12 @@ export const config = {
 		process.env.OWNED_CARDS_DATABASE_ID,
 	wishlistsDataSourceId:
 		process.env.WISHLISTS_DATA_SOURCE_ID ?? process.env.WISHLISTS_DATABASE_ID,
+	battleDecksDataSourceId:
+		process.env.BATTLE_DECKS_DATA_SOURCE_ID ??
+		process.env.BATTLE_DECKS_DATABASE_ID,
+	battleRunsDataSourceId:
+		process.env.BATTLE_RUNS_DATA_SOURCE_ID ??
+		process.env.BATTLE_RUNS_DATABASE_ID,
 	giblApiKey: process.env.GIBL_API_KEY,
 	giblGameType: process.env.GIBL_GAME_TYPE ?? "one-piece",
 	catalogFeedUrl: process.env.CATALOG_FEED_URL,

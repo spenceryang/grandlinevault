@@ -114,6 +114,9 @@ Collectors can **email** card photos to a configured Resend Inbound address (e.g
 ### Email outbound (Resend Send)
 Companion outbound library with three ready-to-use HTML templates: **scan receipt** (matched card + image + Notion link), **trade match** (when a duplicate ↔ wishlist match fires), and **promotional** (new set drops, feature announcements). All templates escape user-controlled fields against HTML injection.
 
+### OP Battle Lab
+Separate Worker entry point (`src/op-battle.ts`) for Notion-native battle simulation. It reads the same Owned Cards database, auto-builds permanent legal-ish Battle Deck pages from each owner's full collection, runs 100-game Monte Carlo matchups, and writes compact Battle Run history pages. The model is official-rule-informed using Bandai's published rules as the baseline, while clearly marking individual card text as heuristic. See [`docs/OP_BATTLE_LAB.md`](./docs/OP_BATTLE_LAB.md).
+
 ## Templates
 
 The Worker provisions and populates a set of managed Notion databases that each act as a reusable template. Every one has gallery-friendly imagery or progress-bar-ready numeric columns so collectors can browse the way they prefer.
@@ -142,10 +145,13 @@ The Worker provisions and populates a set of managed Notion databases that each 
 | **Scan Inbox** | user-created | `docs/NOTION_WORKSPACE_SETUP.md` | Upload front/back images, see status, link to the matched owned card |
 | **Owned Cards** | user-created | `docs/NOTION_WORKSPACE_SETUP.md` | The per-owner source of truth — quantity, condition, scan, pre-grade, current value |
 | **Wishlists** | user-created | `docs/NOTION_WORKSPACE_SETUP.md` | Chase cards with priority and target price |
+| **OP Battle · Battle Decks** | `opBattleDecks` | `src/notion/op-battle-databases.ts` | Permanent auto-built decks per owner / strategy |
+| **OP Battle · Battle Runs** | `opBattleRuns` | `src/notion/op-battle-databases.ts` | Compact Monte Carlo battle history and matchup results |
 
 ### Template guides
 
 - [Binder setup](./BINDER.md) — gallery card size + `BINDER_DENSITY` env var + recommended view tabs (Binder / Owned Only / Missing)
+- [OP Battle Lab](./docs/OP_BATTLE_LAB.md) — separate Worker, permanent generated decks, 100-game simulations, compact history
 - [Luffy Index ETF](./docs/LUFFY_INDEX_ETF.md) — deep-dive + methodology
 - [Character indices](./docs/CHARACTER_INDICES.md) — Zoro / Sanji / Strawhat / Yonko / Donquixote indices on the same library
 - [Archetype completion](./docs/SUB_TYPE_COMPLETION.md) — per-sub-type completion % with curated dictionary
