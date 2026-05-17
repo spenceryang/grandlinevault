@@ -18,7 +18,7 @@ export const decklistEntriesDatabaseConfig = {
 				relatedPropertyName: "Cards",
 			}),
 			"Card ID": Schema.richText(),
-			"Card Image": Schema.url(),
+			"Card Image": Schema.file(),
 			Slot: Schema.select([
 				{ name: "Leader", color: "yellow" },
 				{ name: "Character", color: "blue" },
