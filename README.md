@@ -37,6 +37,7 @@ The current hackathon demo uses Slack + Notion together:
 3. The Worker recognizes the card, enriches it from OPTCG data, and creates or updates an Owned Card row.
 4. Collector asks in Slack: “What card did I just scan?” or “Show my OP-01 cards.”
 5. Notion Agent answers from the Grand Line Vault Notion workspace and links back to the source data.
+6. Collector asks the OP Battle worker to build decks or simulate owner-vs-owner matchups from the same Owned Cards database.
 ```
 
 Validated Slack examples:
@@ -115,7 +116,16 @@ Collectors can **email** card photos to a configured Resend Inbound address (e.g
 Companion outbound library with three ready-to-use HTML templates: **scan receipt** (matched card + image + Notion link), **trade match** (when a duplicate ↔ wishlist match fires), and **promotional** (new set drops, feature announcements). All templates escape user-controlled fields against HTML injection.
 
 ### OP Battle Lab
-Separate Worker entry point (`src/op-battle.ts`) for Notion-native battle simulation. It reads the same Owned Cards database, auto-builds permanent legal-ish Battle Deck pages from each owner's full collection, runs 100-game Monte Carlo matchups, and writes compact Battle Run history pages. The model is official-rule-informed using Bandai's published rules as the baseline, while clearly marking individual card text as heuristic. See [`docs/OP_BATTLE_LAB.md`](./docs/OP_BATTLE_LAB.md).
+Separate deployed Worker entry point (`src/op-battle.ts`) for Notion-native battle simulation. It reads the same Owned Cards database, auto-builds permanent legal-ish Battle Deck pages from each owner's full collection, runs Monte Carlo matchups, and writes compact Battle Run history pages. The model is official-rule-informed using Bandai's published rules as the baseline, while clearly marking individual card text as heuristic. The live smoke test created permanent Spencer and Jarren decks plus a battle run where Spencer won 60% over 10 test battles. See [`docs/OP_BATTLE_LAB.md`](./docs/OP_BATTLE_LAB.md).
+
+Useful demo commands:
+
+```text
+Build Spencer's strongest battle deck.
+Simulate Spencer vs Jarren for 100 battles.
+Simulate Waffle vs Spencer using strongest decks.
+Show recent battle history.
+```
 
 ## Templates
 
@@ -172,7 +182,7 @@ The Worker provisions and populates a set of managed Notion databases that each 
 
 ### Done
 
-- Public GitHub repo and deployed Notion Worker.
+- Public GitHub repo and deployed Notion Workers: the main Grand Line Vault worker plus the separate OP Battle worker.
 - Notion command center with embedded collection, scan inbox, wishlist, and master-set views.
 - Slack-connected Notion Agent flow: ask Vault Quartermaster questions like `show my OP-01 cards` or `what card did I just scan`, and it answers from the Grand Line Vault Notion data.
 - Scan Inbox, Owned Cards, Wishlists, and Master Set databases.
@@ -185,6 +195,7 @@ The Worker provisions and populates a set of managed Notion databases that each 
 - Managed syncs for card catalog, price snapshots, master set, and set analytics (ownership-aware completion %).
 - Agent tools for lookup, enrichment, collection summaries, duplicate detection, and master-set completion.
 - Decklist template with card-list + image-gallery views and OPTCG validator.
+- OP Battle Lab live worker with permanent Battle Deck pages and Battle Run history pages.
 - Luffy Index ETF + Character Indices (Zoro/Sanji/Nami/Strawhat/Yonko/Donquixote) with price weighting and concentration analytics.
 - Related-cards scoring engine and managed `Related Cards` board.
 - Archetype/sub-type completion engine with curated OPTCG dictionary.
@@ -209,6 +220,7 @@ The Worker provisions and populates a set of managed Notion databases that each 
 flowchart LR
     S["Slack collector questions"] --> A["Notion Agent / Grand Line Vault pages"]
     A --> B["Grand Line Vault Worker"]
+    A --> OB["OP Battle Worker"]
     B --> C["GIBL recognition"]
     B --> D["OPTCG API"]
     B --> E["Owned Cards DB"]
@@ -226,6 +238,9 @@ flowchart LR
     F --> P
     Q["Resend inbound (email scans)"] --> A
     B --> R["Resend outbound (receipts, trades, promos)"]
+    OB --> E
+    OB --> BD["Battle Decks DB"]
+    OB --> BR["Battle Runs DB"]
 ```
 
 ## Worker capabilities
@@ -242,6 +257,14 @@ flowchart LR
 ### Automations
 
 - `processScanInboxUpload` — coded and gated behind `ENABLE_NOTION_AUTOMATIONS=1`; use when Worker automations are enabled for the workspace.
+
+### OP Battle worker tools
+
+The battle simulator is deployed as a separate Notion Worker using `workers.op-battle.json`.
+
+- `buildBattleDeck` — auto-builds a permanent legal-ish deck page for an owner from Owned Cards.
+- `simulateBattle` — builds both decks, runs a Monte Carlo matchup, and writes a Battle Run history page.
+- `archiveBattleRuns` — marks older Battle Run pages as done so the workspace stays compact.
 
 ### Agent tools
 
@@ -286,6 +309,8 @@ NOTION_API_TOKEN=
 SCAN_INBOX_DATA_SOURCE_ID=
 OWNED_CARDS_DATA_SOURCE_ID=
 WISHLISTS_DATA_SOURCE_ID=
+BATTLE_DECKS_DATA_SOURCE_ID=
+BATTLE_RUNS_DATA_SOURCE_ID=
 GIBL_API_KEY=
 ```
 
@@ -318,13 +343,15 @@ npm run build
 ```text
 src/
   config.ts                 Environment configuration
-  index.ts                  Worker syncs and Agent tools
+  index.ts                  Main Worker syncs and Agent tools
+  op-battle.ts              Separate OP Battle Worker tools
   data/                     Offline seed data for demo resilience
-  lib/                      Collection, grading, master-set, analytics, decklist, related-cards, luffy-index logic
+  lib/                      Collection, grading, master-set, analytics, decklist, related-cards, luffy-index, battle logic
   notion/                   Notion database read/write helpers and schemas
   providers/                Recognition, generic feeds, OPTCG, TCGdex, and PriceCharting providers
 docs/
   NOTION_WORKSPACE_SETUP.md   Initial workspace provisioning
+  OP_BATTLE_LAB.md            Battle simulator Worker, commands, and model limits
   GALLERY_VIEWS.md            Image-gallery view recipes
   LUFFY_INDEX_ETF.md          Luffy Index ETF concept and methodology
   CHARACTER_INDICES.md        Zoro / Strawhat / Yonko / Donquixote indices
