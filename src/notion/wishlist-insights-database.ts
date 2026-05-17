@@ -10,10 +10,15 @@ export const wishlistInsightsDatabaseConfig = {
 	schema: {
 		databaseIcon: emojiIcon("🌠"),
 		properties: {
+			// Title + pk anchor every view.
 			"Card Name": Schema.title(),
 			"Insight ID": Schema.richText(),
-			Owner: Schema.richText(),
-			"Card ID": Schema.richText(),
+
+			// Target Hit is the action signal — the column users glance
+			// at first to know "buy now?"
+			"Target Hit": Schema.checkbox(),
+
+			// Priority + Status chips next.
 			Priority: Schema.select([
 				{ name: "High", color: "red" },
 				{ name: "Medium", color: "yellow" },
@@ -25,12 +30,22 @@ export const wishlistInsightsDatabaseConfig = {
 				{ name: "Snoozed", color: "gray" },
 				{ name: "Acquired", color: "green" },
 			]),
-			"Target Price": Schema.number("dollar"),
-			"Current Market Price": Schema.number("dollar"),
-			"Dollars Below Target": Schema.number("dollar"),
+
+			// Headline pricing deltas — Percent Below Target can render
+			// as a bar for the "how close to target" visualization.
 			"Percent Below Target": Schema.number("percent"),
-			"Target Hit": Schema.checkbox(),
+			"Dollars Below Target": Schema.number("dollar"),
+			"Current Market Price": Schema.number("dollar"),
+			"Target Price": Schema.number("dollar"),
+
+			// Owner near the end of the heavy block.
+			Owner: Schema.richText(),
+
+			// Free-form reason last.
 			Reason: Schema.richText(),
+
+			// Machine identifier last.
+			"Card ID": Schema.richText(),
 		},
 	},
 };
@@ -45,11 +60,16 @@ export const wishlistBudgetDatabaseConfig = {
 		databaseIcon: emojiIcon("💰"),
 		properties: {
 			Owner: Schema.title(),
-			"Open Items": Schema.number(),
-			"Total Items": Schema.number(),
+
+			// Dollar headline first — the budget board is literally
+			// about money.
 			"Total Target Spend": Schema.number("dollar"),
 			"Total Current Spend": Schema.number("dollar"),
 			"Savings at Target": Schema.number("dollar"),
+
+			// Counts.
+			"Open Items": Schema.number(),
+			"Total Items": Schema.number(),
 		},
 	},
 };
