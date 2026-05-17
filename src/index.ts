@@ -343,7 +343,7 @@ worker.sync("syncOptcgMasterSet", {
 					Rarity: Builder.richText(entry.rarity ?? ""),
 					Color: Builder.richText(entry.color ?? ""),
 					"Card Type": Builder.richText(entry.cardType ?? ""),
-					Image: Builder.url(entry.imageUrl),
+					Image: Builder.file(entry.imageUrl, entry.name),
 					Owned: Builder.checkbox(false),
 				},
 			})),

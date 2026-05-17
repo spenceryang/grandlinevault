@@ -10,22 +10,35 @@ export const masterSetDatabaseConfig = {
 	schema: {
 		databaseIcon: emojiIcon("🗺️"),
 		properties: {
+			// Title + identity come first so they anchor every view.
 			Name: Schema.title(),
 			"Variant ID": Schema.richText(),
-			"Base Card ID": Schema.richText(),
-			"Set ID": Schema.richText(),
-			"Set Name": Schema.richText(),
+
+			// Primary action + visual chip rank above everything else so
+			// the user sees them without scrolling the table view.
+			Owned: Schema.checkbox(),
 			Variant: Schema.select([
 				{ name: "base", color: "default" },
 				{ name: "parallel", color: "blue" },
 				{ name: "alt-art", color: "purple" },
 				{ name: "promo", color: "orange" },
 			]),
+
+			// The visual itself — file-typed so it renders as the gallery
+			// card cover when the view's card preview is set to Image.
+			Image: Schema.file(),
+
+			// Where the card lives — Set Name first because it's the
+			// human-readable label most collectors recognize.
+			"Set Name": Schema.richText(),
 			Rarity: Schema.richText(),
 			Color: Schema.richText(),
 			"Card Type": Schema.richText(),
-			Image: Schema.url(),
-			Owned: Schema.checkbox(),
+
+			// Grouping + machine identifiers sit at the end of the table
+			// so the eye-catching columns above stay visible by default.
+			"Base Card ID": Schema.richText(),
+			"Set ID": Schema.richText(),
 		},
 	},
 };
