@@ -106,12 +106,6 @@ A separate, namespaced provider section wraps the open [TCGdex](https://tcgdex.d
 ### PSA grading hooks
 Scaffolded provider stubs for PSA Public API integration — Cert Verification, Population Report, Auction Prices, Price Guide, Card Facts, and OAuth 2 password-grant token exchange. PSA's full endpoint reference is gated behind their authenticated docs page, so the stubs throw a clear not-implemented error pointing at the real URL; types and function signatures are in place so callers can wire against them once Spencer has dashboard access.
 
-### Email intake (Resend Inbound)
-Collectors can **email** card photos to a configured Resend Inbound address (e.g. `scans@grandlinevault.com`) and the worker turns each delivered email into one or more Scan Inbox rows tied to the sender. Includes Svix-style HMAC signature verification, 5-minute replay protection, and an image-only attachment filter to stop "free PDF upload" mischief.
-
-### Email outbound (Resend Send)
-Companion outbound library with three ready-to-use HTML templates: **scan receipt** (matched card + image + Notion link), **trade match** (when a duplicate ↔ wishlist match fires), and **promotional** (new set drops, feature announcements). All templates escape user-controlled fields against HTML injection.
-
 ## Templates
 
 The Worker provisions and populates a set of managed Notion databases that each act as a reusable template. Every one has gallery-friendly imagery or progress-bar-ready numeric columns so collectors can browse the way they prefer.
@@ -172,8 +166,6 @@ The Worker provisions and populates a set of managed Notion databases that each 
 - Price movers engine (top gainers/losers over 7d/30d windows) reading the existing `priceSnapshots` time-series.
 - Trade matcher engine (duplicate ↔ wishlist join across owners).
 - Server-side `cardName` filter wired through every catalog / starter-deck / promo filter route.
-- Resend inbound parser + signature verification for email-as-intake.
-- Resend outbound helpers with HTML templates for scan receipts, trade matches, and promotional emails.
 - PSA Public API scaffolds (cert verification, population, auction prices, price guide, card facts, OAuth 2 password-grant).
 - Seed scan test with OP13-118 Monkey.D.Luffy and OP13-119 Portgas.D.Ace.
 
@@ -183,6 +175,9 @@ The Worker provisions and populates a set of managed Notion databases that each 
 - Portfolio history currently uses snapshots and collection fields; true gain/loss over time needs recurring price snapshots plus a charting view.
 - Buying flow is P2 and should start as marketplace outbound links, not checkout.
 - Rarity-breakdown and top-cards analytics templates exist but their syncs are not yet wired.
+- Email intake (Resend Inbound) — webhook + Svix HMAC verification + image-attachment filter that turns inbound emails into Scan Inbox rows. Planned, not yet implemented.
+- Email outbound (Resend Send) — scan-receipt, trade-match, and promotional HTML templates. Planned, not yet implemented.
+- Discord and Slack intake bots — drop a photo in a channel, create a Scan Inbox row tied to your Discord/Slack identity. Planned. (Slack as an Agent destination via Notion's native AI integration already works — this is specifically the intake-bot path.)
 
 ## Architecture
 
@@ -205,8 +200,6 @@ flowchart LR
     D --> O["Archetype Completion"]
     E --> P["Trade Matches"]
     F --> P
-    Q["Resend inbound (email scans)"] --> A
-    B --> R["Resend outbound (receipts, trades, promos)"]
 ```
 
 ## Worker capabilities

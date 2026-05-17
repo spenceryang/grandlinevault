@@ -33,10 +33,10 @@ The product is collector-first on the demo path, but the inventory + dashboards 
 
 There's no single "right" way to scan a card. So we don't pick one — we let the user pick.
 
-- **Notion upload** — drop a photo into the Scan Inbox database. The default.
-- **Email (Resend Inbound)** — collectors email a card photo to a configured address. The email becomes a Scan Inbox row.
-- **Discord bot** — drop a photo in a channel; the bot creates a Scan Inbox row tied to your Discord identity. Great for groups already brewing decks together.
-- **Slack** — same pattern as Discord, for crews on Slack.
+- **Notion upload** — drop a photo into the Scan Inbox database. The default. **(shipped)**
+- **Email (Resend Inbound)** — collectors email a card photo to a configured address. The email becomes a Scan Inbox row. **(planned — not yet implemented)**
+- **Discord bot** — drop a photo in a channel; the bot creates a Scan Inbox row tied to your Discord identity. Great for groups already brewing decks together. **(planned)**
+- **Slack intake bot** — same pattern as Discord, for crews on Slack. **(planned. Note: Slack already works as a *destination* via Notion's native AI integration — this list item is specifically the inbound intake-bot path.)**
 - **iMessage / Apple Shortcuts** — planned; the cheapest path reuses the email intake.
 
 Adding a new intake method is a one-screen contract: accept an image + an owner identifier, write a Scan Inbox row. Every method funnels into the same downstream pipeline. **The user picks how they want to scan; we adapt.**
@@ -119,12 +119,17 @@ The Worker is the brain; Notion is the body.
 - Archetype Completion engine + Notion board
 - Server-side `cardName` search wired through every catalog/starter/promo filter
 - Offline OP15-EB04 seed for demo resilience
-- Resend Inbound parser + signature verification (email-as-intake)
-- Resend Outbound templates (scan receipts, trade matches, promos)
-- Discord bot (draft) + Slack intake
 - PSA provider scaffolds (cert verification, population, auction prices, price guide, card facts, OAuth)
 - TCGdex provider library (Pokémon TCG, isolated namespace)
 - PriceCharting provider library (graded prices)
+
+### Planned — not yet implemented
+
+- **Resend Inbound parser** — webhook + Svix HMAC verification + image-attachment filter that turns inbound emails into Scan Inbox rows
+- **Resend Outbound templates** — scan-receipt, trade-match, and promotional HTML templates
+- **Discord intake bot** — drop a photo in a channel, get a Scan Inbox row tied to your Discord identity
+- **Slack intake bot** — same pattern as Discord, for Slack-first crews (Slack as an Agent destination via Notion's native AI integration already works)
+- **iMessage / Apple Shortcuts intake** — depends on the Resend Inbound path above
 
 ## What we're going for in the demo
 
@@ -144,7 +149,7 @@ The judge takeaway:
 - Full marketplace checkout (P2 — start as outbound marketplace links, then graduate to checkout only after recommendations and wishlists are reliable)
 - Official PSA grading replacement (we frame everything as **pre-grade** estimates)
 - Japanese / Chinese / multilingual card support (English-only for P0)
-- Mobile app outside Notion (the mobile path is "Apple Shortcut emails the image, Resend Inbound picks it up")
+- Mobile app outside Notion (the planned mobile path is "Apple Shortcut emails the image, Resend Inbound picks it up" once the Resend Inbound parser ships)
 - Deck simulator
 - High-frequency intraday trading dashboard
 
