@@ -14,12 +14,15 @@ type PageData = {
 	id: string;
 	properties: Record<string, unknown>;
 	url?: string;
+	cover?: unknown;
+	icon?: unknown;
 };
 
 type FileEntry = {
-	type?: "external" | "file";
+	type?: string;
 	external?: { url?: string };
 	file?: { url?: string };
+	file_upload?: { id?: string };
 	name?: string;
 };
 
@@ -158,7 +161,9 @@ export async function processScanInboxPage(
 			"Front image",
 			"Image",
 			"Scan image",
-		]) ?? (await extractFirstPageBodyImageReference(notion, pageData.id));
+		]) ??
+		extractPageMediaReference(pageData) ??
+		(await extractFirstPageBodyImageReference(notion, pageData.id));
 	const ownerName =
 		extractRichText(pageData.properties.Owner) ||
 		extractTitle(pageData.properties.Name) ||
@@ -188,7 +193,10 @@ export async function processScanInboxPage(
 
 		const result = {
 			status: "Needs Review" as const,
-			message: "No Front image file was found on this Scan Inbox row.",
+			message:
+				"No accessible card image was found. The Notion API shows Front image as empty, with no page cover, icon, or image block available to the Worker.",
+			scanInboxPageId: pageData.id,
+			scanInboxUrl: pageData.url,
 		};
 		await updateScanInboxResult(notion, pageData.id, result);
 		return result;
@@ -483,6 +491,19 @@ async function extractFirstPageBodyImageReference(
 		);
 		if (nestedRef) return nestedRef;
 	}
+
+	return null;
+}
+
+
+function extractPageMediaReference(pageData: PageData): FileReference | null {
+	const cover = pageData.cover as FileEntry | null | undefined;
+	const coverUrl = cover?.external?.url ?? cover?.file?.url;
+	if (coverUrl) return { url: coverUrl, name: "Page cover" };
+
+	const icon = pageData.icon as FileEntry | null | undefined;
+	const iconUrl = icon?.external?.url ?? icon?.file?.url;
+	if (iconUrl) return { url: iconUrl, name: "Page icon" };
 
 	return null;
 }
