@@ -32,11 +32,21 @@ When the collector toggles `Owned`, the row moves between views instantly. No fo
 
 ### Notion view settings for the grid aesthetic
 
+- **Page width**: turn **Full Width** on (page `···` menu → Customize page → Full Width). Without this, Notion caps the page at ~720px and the gallery collapses to 1–2 cards per row no matter what card size you pick.
 - **Card size**: Small (NOT Large — keeps the grid dense, ~6 cards per row on desktop)
 - **Fit image**: **Page cover** (card art fills its tile edge-to-edge)
 - **Show / hide properties**: hide everything except the cover. The grid is image-only.
 - **Sort**: `Card ID` asc so the grid follows the set's natural numbering
 - **Group**: none (don't break the grid into sections)
+
+**Troubleshooting — "I'm only seeing 1–2 cards per row":**
+
+| Cause | Fix |
+|---|---|
+| Page is not Full Width | `···` menu on the page → Customize page → toggle Full Width on |
+| Card size is Medium or Large | View settings → Card size → Small |
+| Fit page cover is off | View settings → Fit page cover → on |
+| `Owned Image` / `Need Image` is still a `url` property type | Confirm it's `Schema.file()` (the schema in this repo already is); url-typed images don't qualify as page covers |
 
 ## Compact thumbnails — match image size to card size
 
