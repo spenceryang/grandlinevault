@@ -61,7 +61,7 @@ Agent behavior rules for the demo:
 ## Features
 
 ### Scan and recognize
-Upload a card photo to the Scan Inbox, or send a card image to Vault Quartermaster from Slack. The Worker calls a recognition provider (GIBL), classifies confidence + language, and only auto-matches English cards. Low-confidence and non-English scans land in a review queue rather than polluting the collection. Front-only scans work; front+back enables a richer pre-grade estimate.
+Upload a card photo to the Scan Inbox, or send a card image to Vault Quartermaster from Slack. The Worker calls GIBL first, classifies confidence + language, and only auto-matches English cards. If GIBL cannot return a usable card identity, an optional OpenAI vision fallback (`OPENAI_API_KEY`) can read the visible card number/name before canonicalizing through OPTCG. Low-confidence and non-English scans land in a review queue rather than polluting the collection. Front-only scans work; front+back enables a richer pre-grade estimate.
 
 ### Enrich from OPTCG live data
 On a confident match, the Worker pulls canonical card data from the OPTCG API (`getCardDetails`, `getSetCards`, `filterCatalogCards`, plus starter-deck / promo / DON variants) — name, set, rarity, color, type, cost, power, counter, attribute, art, market price. The same library powers offline demo mode using a bundled OP15-EB04 seed.

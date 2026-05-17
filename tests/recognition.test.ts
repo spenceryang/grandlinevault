@@ -3,6 +3,7 @@ import test from "node:test";
 import {
 	classifyRecognition,
 	normalizeRecognitionCandidate,
+	parseOpenAiVisionCardResult,
 } from "../src/providers/recognition.js";
 
 test("matches confident English cards", () => {
@@ -58,6 +59,61 @@ test("normalizes GIBL identity/card-details fields", () => {
 			confidence: 0.91,
 			language: "Unknown",
 			imageUrl: "https://example.com/card.jpg",
+		},
+	);
+});
+
+test("parses OpenAI Responses output_text vision result", () => {
+	assert.deepEqual(
+		parseOpenAiVisionCardResult({
+			output_text: JSON.stringify({
+				isOnePieceCard: true,
+				isEnglish: true,
+				cardId: "OP13-003",
+				name: "Gol.D.Roger",
+				confidence: 0.94,
+				reason: null,
+			}),
+		}),
+		{
+			isOnePieceCard: true,
+			isEnglish: true,
+			cardId: "OP13-003",
+			name: "Gol.D.Roger",
+			confidence: 0.94,
+			reason: null,
+		},
+	);
+});
+
+test("parses OpenAI Responses nested output text", () => {
+	assert.deepEqual(
+		parseOpenAiVisionCardResult({
+			output: [
+				{
+					content: [
+						{
+							type: "output_text",
+							text: JSON.stringify({
+								isOnePieceCard: true,
+								isEnglish: true,
+								cardId: "ST02-009",
+								name: "Trafalgar Law",
+								confidence: 0.88,
+								reason: null,
+							}),
+						},
+					],
+				},
+			],
+		}),
+		{
+			isOnePieceCard: true,
+			isEnglish: true,
+			cardId: "ST02-009",
+			name: "Trafalgar Law",
+			confidence: 0.88,
+			reason: null,
 		},
 	);
 });

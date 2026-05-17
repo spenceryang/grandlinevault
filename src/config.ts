@@ -14,7 +14,9 @@ export const config = {
 		process.env.BATTLE_RUNS_DATA_SOURCE_ID ??
 		process.env.BATTLE_RUNS_DATABASE_ID,
 	giblApiKey: process.env.GIBL_API_KEY,
-	giblGameType: process.env.GIBL_GAME_TYPE ?? "one-piece",
+	giblGameType: process.env.GIBL_GAME_TYPE ?? "one_piece",
+	openaiApiKey: process.env.OPENAI_API_KEY,
+	openaiVisionModel: process.env.OPENAI_VISION_MODEL ?? "gpt-4.1-mini",
 	catalogFeedUrl: process.env.CATALOG_FEED_URL,
 	priceFeedUrl: process.env.PRICE_FEED_URL,
 	optcgSetIds: parseCsv(
