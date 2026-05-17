@@ -1,11 +1,13 @@
 import type { Client } from "@notionhq/client";
 import { config, requireEnv } from "../config.js";
+import type { CanonicalCardVariant } from "../providers/optcgapi/resolve-card.js";
 import { resolveOptcgCardDetails } from "../providers/optcgapi/resolve-card.js";
+import { filterOptcgCards } from "../providers/optcgapi/filter-cards.js";
 import {
 	recognizeCardFromImageBlob,
 	recognizeCardFromImageUrl,
 } from "../providers/recognition.js";
-import type { RecognitionResult } from "../types.js";
+import type { RecognitionCandidate, RecognitionResult } from "../types.js";
 import { createOwnedCardPage } from "./write-owned-card.js";
 
 type PageData = {
@@ -287,7 +289,7 @@ async function completeRecognizedScan(
 		return result;
 	}
 
-	const variants = await resolveOptcgCardDetails(recognition.candidate.cardId);
+	const variants = await resolveRecognizedOptcgVariants(recognition.candidate);
 	const variant =
 		variants.find((candidate) => candidate.cardImageId === candidate.cardSetId) ??
 		variants[0];
@@ -356,6 +358,18 @@ async function uploadImageFile(
 		type: "file_upload" as const,
 		file_upload: { id: upload.id },
 	};
+}
+
+async function resolveRecognizedOptcgVariants(candidate: RecognitionCandidate): Promise<CanonicalCardVariant[]> {
+	try {
+		return await resolveOptcgCardDetails(candidate.cardId);
+	} catch {
+		const matches = await filterOptcgCards({ cardName: candidate.name });
+		return matches.map((card) => ({
+			...card,
+			cardSource: /^ST\d{2}-/i.test(card.cardSetId) ? "starter" : /^P-/i.test(card.cardSetId) ? "promo" : "set",
+		}));
+	}
 }
 
 export function extractFirstFileUrl(

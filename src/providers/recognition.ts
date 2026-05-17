@@ -6,12 +6,45 @@ import type {
 
 type RawRecognitionCandidate = {
 	cardId?: string;
+	card_id?: string;
+	card_identity?: string;
 	id?: string;
 	name?: string;
+	card_name?: string;
 	confidence?: number;
+	card_identity_confidence?: number;
 	language?: string;
 	imageUrl?: string;
+	image_url?: string;
 	image?: string;
+};
+
+type GiblCardDetails = RawRecognitionCandidate & {
+	data?: RawRecognitionCandidate;
+	card?: RawRecognitionCandidate;
+};
+
+type GiblVisionItem = {
+	card?: {
+		type?: { label?: string; confidence?: number };
+		identity?: {
+			best?: {
+				label?: string | number;
+				confidence?: number;
+				match?: {
+					id?: string | number;
+					cardId?: string;
+					card_id?: string;
+					name?: string;
+					card_name?: string;
+					number?: string;
+					printedTotal?: string;
+					image_url?: string;
+					imageUrl?: string;
+				};
+			};
+		};
+	};
 };
 
 export async function recognizeCardFromImageUrl(
@@ -50,9 +83,15 @@ export async function recognizeCardFromImageBlob(
 	const payload = (await response.json()) as {
 		data?: RawRecognitionCandidate[] | RawRecognitionCandidate;
 		candidates?: RawRecognitionCandidate[];
+		identity?: RawRecognitionCandidate[];
+		items?: GiblVisionItem[];
 	};
 
-	const rawCandidates = Array.isArray(payload.data)
+	const rawCandidates = Array.isArray(payload.items)
+		? payload.items.map(toCandidateFromGiblVisionItem).filter((candidate): candidate is RawRecognitionCandidate => Boolean(candidate))
+		: Array.isArray(payload.identity)
+		? await hydrateGiblIdentityCandidates(payload.identity, apiKey)
+		: Array.isArray(payload.data)
 		? payload.data
 		: payload.data
 			? [payload.data]
@@ -69,8 +108,9 @@ export async function recognizeCardFromImageBlob(
 export function normalizeRecognitionCandidate(
 	candidate: RawRecognitionCandidate,
 ): RecognitionCandidate | null {
-	const cardId = candidate.cardId ?? candidate.id;
-	if (!cardId || !candidate.name) {
+	const cardId = candidate.cardId ?? candidate.card_id ?? candidate.card_identity ?? candidate.id;
+	const name = candidate.name ?? candidate.card_name;
+	if (!cardId || !name) {
 		return null;
 	}
 
@@ -78,11 +118,40 @@ export function normalizeRecognitionCandidate(
 
 	return {
 		cardId,
-		name: candidate.name,
-		confidence: candidate.confidence ?? 0,
+		name,
+		confidence: normalizeConfidence(
+			candidate.confidence ?? candidate.card_identity_confidence ?? 0,
+		),
 		language,
-		imageUrl: candidate.imageUrl ?? candidate.image,
+		imageUrl: candidate.imageUrl ?? candidate.image_url ?? candidate.image,
 	};
+}
+
+function toCandidateFromGiblVisionItem(
+	item: GiblVisionItem,
+): RawRecognitionCandidate | null {
+	const best = item.card?.identity?.best;
+	const match = best?.match;
+	const name = match?.name ?? match?.card_name;
+	if (!best || !match || !name) return null;
+
+	return {
+		cardId: String(
+			match.cardId ??
+				match.card_id ??
+				match.id ??
+				match.number ??
+				best.label ??
+				"",
+		),
+		name,
+		confidence: best.confidence,
+		imageUrl: match.imageUrl ?? match.image_url,
+	};
+}
+
+function normalizeConfidence(confidence: number): number {
+	return confidence > 1 ? confidence / 100 : confidence;
 }
 
 export function classifyRecognition(
@@ -97,7 +166,7 @@ export function classifyRecognition(
 	}
 
 	const [best] = candidates;
-	if (best.language !== "English") {
+	if (best.language !== "English" && best.language !== "Unknown") {
 		return {
 			status: "rejected",
 			reason: "Only English cards are supported in the MVP.",
@@ -114,6 +183,35 @@ export function classifyRecognition(
 	}
 
 	return { status: "matched", candidate: best };
+}
+
+async function hydrateGiblIdentityCandidates(
+	identities: RawRecognitionCandidate[],
+	apiKey: string,
+): Promise<RawRecognitionCandidate[]> {
+	return Promise.all(
+		identities.map(async (identity) => {
+			const cardIdentity = identity.card_identity ?? identity.cardId ?? identity.id;
+			if (!cardIdentity) return identity;
+
+			try {
+				const response = await fetch(
+					`https://gibltcg.com/api/v1/card-details/${encodeURIComponent(cardIdentity)}?key=${encodeURIComponent(apiKey)}`,
+				);
+				if (!response.ok) return identity;
+				const detailsPayload = (await response.json()) as GiblCardDetails;
+				const details = detailsPayload.data ?? detailsPayload.card ?? detailsPayload;
+				return {
+					...details,
+					card_identity: cardIdentity,
+					card_identity_confidence: identity.card_identity_confidence,
+					confidence: identity.confidence ?? identity.card_identity_confidence,
+				};
+			} catch {
+				return identity;
+			}
+		}),
+	);
 }
 
 function normalizeLanguage(
