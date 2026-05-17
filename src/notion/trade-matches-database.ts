@@ -10,19 +10,12 @@ export const tradeMatchesDatabaseConfig = {
 	schema: {
 		databaseIcon: emojiIcon("🤝"),
 		properties: {
+			// Title + pk anchor every view.
 			"Card Name": Schema.title(),
 			"Match ID": Schema.richText(),
-			"From Owner": Schema.richText(),
-			"To Owner": Schema.richText(),
-			"Card ID": Schema.richText(),
-			"Available Quantity": Schema.number(),
-			Priority: Schema.select([
-				{ name: "High", color: "red" },
-				{ name: "Medium", color: "yellow" },
-				{ name: "Low", color: "gray" },
-				{ name: "Unset", color: "default" },
-			]),
-			"Target Price": Schema.number("dollar"),
+
+			// Status + Priority chips are the headline visuals. Filter
+			// views (Suggested / Proposed / Accepted) ride on Status.
 			Status: Schema.select([
 				{ name: "Suggested", color: "blue" },
 				{ name: "Proposed", color: "yellow" },
@@ -30,6 +23,21 @@ export const tradeMatchesDatabaseConfig = {
 				{ name: "Declined", color: "red" },
 				{ name: "Completed", color: "gray" },
 			]),
+			Priority: Schema.select([
+				{ name: "High", color: "red" },
+				{ name: "Medium", color: "yellow" },
+				{ name: "Low", color: "gray" },
+				{ name: "Unset", color: "default" },
+			]),
+
+			// Owners + quantity — the trade direction at a glance.
+			"From Owner": Schema.richText(),
+			"To Owner": Schema.richText(),
+			"Available Quantity": Schema.number(),
+			"Target Price": Schema.number("dollar"),
+
+			// Card identifier last.
+			"Card ID": Schema.richText(),
 		},
 	},
 };
