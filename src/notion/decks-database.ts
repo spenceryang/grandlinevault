@@ -10,28 +10,42 @@ export const decksDatabaseConfig = {
 	schema: {
 		databaseIcon: emojiIcon("🎴"),
 		properties: {
+			// Title + pk anchor every view.
 			"Deck Name": Schema.title(),
 			"Deck ID": Schema.richText(),
-			Owner: Schema.richText(),
-			"Leader Name": Schema.richText(),
-			"Leader Card ID": Schema.richText(),
-			"Leader Image": Schema.url(),
-			Colors: Schema.richText(),
+
+			// At-a-glance state — colored chips that drive the
+			// "My Decks", "Building", "Active" views.
+			Status: Schema.select([
+				{ name: "Building", color: "yellow" },
+				{ name: "Active", color: "green" },
+				{ name: "Retired", color: "gray" },
+			]),
 			Format: Schema.select([
 				{ name: "Standard", color: "blue" },
 				{ name: "Online", color: "green" },
 				{ name: "Casual", color: "gray" },
 				{ name: "Limited", color: "purple" },
 			]),
-			Status: Schema.select([
-				{ name: "Building", color: "yellow" },
-				{ name: "Active", color: "green" },
-				{ name: "Retired", color: "gray" },
-			]),
+
+			// Headline numbers + the Leader visual.
 			"Card Count": Schema.number(),
 			"Estimated Value": Schema.number("dollar"),
-			Created: Schema.date(),
+			"Leader Image": Schema.file(),
+
+			// Leader identity + colors.
+			"Leader Name": Schema.richText(),
+			Colors: Schema.richText(),
+
+			// Owner.
+			Owner: Schema.richText(),
+
+			// Dates near the end.
 			Updated: Schema.date(),
+			Created: Schema.date(),
+
+			// Machine identifier + free-form notes last.
+			"Leader Card ID": Schema.richText(),
 			Notes: Schema.richText(),
 		},
 	},
