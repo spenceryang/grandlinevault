@@ -22,10 +22,10 @@ export async function createBattleDeckPage(
 			? { cover: { type: "external" as const, external: { url: deck.leader.imageUrl } } }
 			: {}),
 		properties: {
-			"Deck Name": title(`${deck.ownerName} · ${deck.leader.cardName} · ${deck.strategy}`),
+			Name: title(`${deck.ownerName} · ${deck.leader.cardName} · ${deck.strategy}`),
 			"Deck ID": richText(deck.deckId),
 			Owner: richText(deck.ownerName),
-			Status: status("Active"),
+			Status: status("In progress"),
 			Strategy: select(deck.strategy),
 			"Leader Name": richText(deck.leader.cardName),
 			"Leader Card ID": richText(deck.leader.cardId),
@@ -53,9 +53,9 @@ export async function createBattleRunPage(
 	const page = await notion.pages.create({
 		parent: { data_source_id: dataSourceId },
 		properties: {
-			Matchup: title(`${result.playerA} vs ${result.playerB}`),
+			Name: title(`${result.playerA} vs ${result.playerB}`),
 			"Run ID": richText(result.runId),
-			Status: status("Active"),
+			Status: status("In progress"),
 			Winner: richText(result.winner),
 			"Player A": richText(result.playerA),
 			"Player B": richText(result.playerB),

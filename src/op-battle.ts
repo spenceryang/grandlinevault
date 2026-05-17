@@ -135,7 +135,7 @@ worker.tool("archiveBattleRuns", {
 		for (const page of archive) {
 			await context.notion.pages.update({
 				page_id: page.id,
-				properties: { Status: { status: { name: "Archived" } } },
+				properties: { Status: { status: { name: "Done" } } },
 			});
 		}
 		return {

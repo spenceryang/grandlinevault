@@ -10,7 +10,7 @@ export const battleDecksDatabaseConfig = {
 	schema: {
 		databaseIcon: emojiIcon("⚔️"),
 		properties: {
-			"Deck Name": Schema.title(),
+			Name: Schema.title(),
 			"Deck ID": Schema.richText(),
 			Owner: Schema.richText(),
 			Status: Schema.status({
@@ -52,7 +52,7 @@ export const battleRunsDatabaseConfig = {
 	schema: {
 		databaseIcon: emojiIcon("🎲"),
 		properties: {
-			Matchup: Schema.title(),
+			Name: Schema.title(),
 			"Run ID": Schema.richText(),
 			Status: Schema.status({
 				groups: [
