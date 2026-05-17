@@ -17,15 +17,23 @@ type RawRecognitionCandidate = {
 export async function recognizeCardFromImageUrl(
 	imageUrl: string,
 ): Promise<RecognitionResult> {
-	const apiKey = requireEnv(config.giblApiKey, "GIBL_API_KEY");
 	const imageResponse = await fetch(imageUrl);
 
 	if (!imageResponse.ok) {
 		throw new Error(`Unable to fetch scan image: ${imageResponse.status}.`);
 	}
 
+	return recognizeCardFromImageBlob(await imageResponse.blob(), "scan.jpg");
+}
+
+export async function recognizeCardFromImageBlob(
+	imageBlob: Blob,
+	filename = "scan.jpg",
+): Promise<RecognitionResult> {
+	const apiKey = requireEnv(config.giblApiKey, "GIBL_API_KEY");
+
 	const body = new FormData();
-	body.append("file", await imageResponse.blob(), "scan.jpg");
+	body.append("file", imageBlob, filename);
 
 	const response = await fetch(
 		`https://gibltcg.com/api/v1/predict-card?key=${encodeURIComponent(apiKey)}`,

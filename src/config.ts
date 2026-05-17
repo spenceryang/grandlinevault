@@ -24,6 +24,8 @@ export const config = {
 	recognitionConfidenceThreshold: Number(
 		process.env.RECOGNITION_CONFIDENCE_THRESHOLD ?? "0.82",
 	),
+	slackBotToken: process.env.SLACK_BOT_TOKEN,
+	slackOwnerMap: process.env.SLACK_OWNER_MAP,
 };
 
 export function requireEnv(value: string | undefined, name: string): string {

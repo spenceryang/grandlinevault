@@ -57,6 +57,11 @@ import {
 	classifyRecognition,
 	recognizeCardFromImageUrl,
 } from "./providers/recognition.js";
+import {
+	extractSlackCardIntakeInput,
+	postSlackResponse,
+	processSlackCardImage,
+} from "./lib/slack-intake.js";
 
 const worker = new Worker();
 export default worker;
@@ -495,6 +500,53 @@ worker.tool("processScanInboxQueue", {
 	}),
 	execute: async ({ limit }, context) => {
 		return processScanInboxQueue(context.notion, limit);
+	},
+});
+
+worker.tool("processSlackCardImage", {
+	title: "Process Slack Card Image",
+	description:
+		"Take a card image URL from Slack, add it to Scan Inbox, recognize/enrich the English One Piece card, and create the owned-card row.",
+	schema: j.object({
+		imageUrl: j.string().describe("Slack file URL or public image URL."),
+		ownerName: j.string().nullable().describe("Optional explicit owner name, e.g. Spencer, Jarren, or Waffle."),
+		slackUserId: j.string().nullable().describe("Slack user ID used with SLACK_OWNER_MAP when ownerName is omitted."),
+		filename: j.string().nullable().describe("Original Slack filename."),
+	}),
+	execute: async ({ imageUrl, ownerName, slackUserId, filename }, context) => {
+		return processSlackCardImage(context.notion, {
+			imageUrl,
+			ownerName,
+			slackUserId,
+			filename,
+		});
+	},
+});
+
+worker.webhook("slackCardIntake", {
+	title: "Slack Card Intake",
+	description:
+		"Receives a Slack image payload or relay payload, adds it to Scan Inbox, processes the card, and optionally posts back to Slack response_url.",
+	execute: async (events, context) => {
+		for (const event of events) {
+			const body = event.body;
+			if (body.type === "url_verification") {
+				console.log("Slack URL verification received. Use a tiny Slack relay for direct Slack Events API verification; this Worker webhook intentionally returns the standard Notion webhook success body.");
+				continue;
+			}
+
+			const input = extractSlackCardIntakeInput(body);
+			if (!input) {
+				console.log("Slack card intake skipped: no image URL in payload.");
+				continue;
+			}
+
+			const result = await processSlackCardImage(context.notion, input);
+			const responseUrl = typeof body.response_url === "string" ? body.response_url : undefined;
+			if (responseUrl) {
+				await postSlackResponse(responseUrl, result.slackReply);
+			}
+		}
 	},
 });
 

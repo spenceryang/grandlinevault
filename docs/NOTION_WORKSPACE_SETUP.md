@@ -142,3 +142,36 @@ Use these rules in the Notion Custom Agent connected to Slack:
 - For follow-up questions, preserve the previous filter context. Example: after `show my OP-01 cards`, `which is the most expensive?` should mean the most expensive OP-01 result.
 - Prefer collector-friendly IDs like `OP01-001 Parallel`; avoid exposing internal variant IDs like `OP01-001_p1` unless useful for debugging.
 - Include card name, set/card number, rarity or type, color, quantity, owner, market price, and a Notion link when available.
+
+
+## Slack image intake
+
+Vault Quartermaster can process an image that starts in Slack, but Slack-hosted file URLs are private. Configure a Slack bot token so the Worker can download the file bytes before sending them to GIBL.
+
+Required deployed Worker env vars:
+
+```text
+SLACK_BOT_TOKEN=xoxb-...
+SLACK_OWNER_MAP=U_SLACK_SPENCER:Spencer,U_SLACK_JARREN:Jarren,U_SLACK_WAFFLE:Waffle
+```
+
+Supported paths:
+
+1. **Agent tool path** — if the Notion Agent can see or pass the Slack file URL, ask it to call `processSlackCardImage` with `imageUrl`, `slackUserId`, and/or `ownerName`.
+2. **Relay/webhook path** — use a tiny Slack relay or Slack Workflow to send `{ image_url, user_id, filename, response_url }` to the Worker webhook `slackCardIntake`. The Worker creates the Scan Inbox row, processes it, creates the Owned Card row, and posts back to `response_url` when provided.
+
+Direct Slack Events API registration usually needs a relay because Slack URL verification expects a raw `challenge` response, while Notion Worker webhooks return the standard Worker success response.
+
+Recommended demo prompts:
+
+- `@Vault Quartermaster scan this for Spencer`
+- `@Vault Quartermaster add this card to Jarren's collection`
+- `@Vault Quartermaster process this image for Waffle`
+
+Expected result:
+
+```text
+Added to Spencer's collection: Matched Nami (OP01-016) · OP-01 · R · $1.35
+Owned card: https://www.notion.so/...
+Scan Inbox: https://www.notion.so/...
+```

@@ -13,7 +13,7 @@ Live workspace: [Grand Line Vault in Notion](https://www.notion.so/Grand-Line-Va
 Grand Line Vault is scoped as a **One Piece TCG-first collector workspace** for the Notion hackathon. The demo path stays focused on English One Piece cards:
 
 ```text
-Scan Inbox image upload → Agent processes scan → Notion stores the owned card → Slack asks the Agent → Notion answers from the vault
+Scan Inbox image upload or Slack card image → Agent/Worker processes scan → Notion stores the owned card → Slack asks the Agent → Notion answers from the vault
 ```
 
 The repository now also contains provider libraries for adjacent expansion tracks. These are intentionally secondary:
@@ -32,7 +32,7 @@ For judging, present the project as **a Notion-native One Piece card vault with 
 The current hackathon demo uses Slack + Notion together:
 
 ```text
-1. Collector uploads an English One Piece card image to the Notion Scan Inbox.
+1. Collector uploads an English One Piece card image to the Notion Scan Inbox, or sends the card image to Vault Quartermaster from Slack.
 2. Vault Quartermaster / Notion Agent processes the latest scan through the Worker.
 3. The Worker recognizes the card, enriches it from OPTCG data, and creates or updates an Owned Card row.
 4. Collector asks in Slack: “What card did I just scan?” or “Show my OP-01 cards.”
@@ -61,10 +61,24 @@ Agent behavior rules for the demo:
 ## Features
 
 ### Scan and recognize
-Upload a card photo to the Scan Inbox; the Worker calls a recognition provider (GIBL), classifies confidence + language, and only auto-matches English cards. Low-confidence and non-English scans land in a review queue rather than polluting the collection. Front-only scans work; front+back enables a richer pre-grade estimate.
+Upload a card photo to the Scan Inbox, or send a card image to Vault Quartermaster from Slack. The Worker calls a recognition provider (GIBL), classifies confidence + language, and only auto-matches English cards. Low-confidence and non-English scans land in a review queue rather than polluting the collection. Front-only scans work; front+back enables a richer pre-grade estimate.
 
 ### Enrich from OPTCG live data
 On a confident match, the Worker pulls canonical card data from the OPTCG API (`getCardDetails`, `getSetCards`, `filterCatalogCards`, plus starter-deck / promo / DON variants) — name, set, rarity, color, type, cost, power, counter, attribute, art, market price. The same library powers offline demo mode using a bundled OP15-EB04 seed.
+
+
+### Slack image intake
+Vault Quartermaster can now process a Slack card image instead of requiring the user to manually upload into Notion first. The `processSlackCardImage` tool downloads the Slack file with `SLACK_BOT_TOKEN`, uploads the image into Scan Inbox through Notion File Uploads, runs the existing GIBL + OPTCG processor, creates the Owned Card row, and returns a Slack-ready reply with the result and Notion links.
+
+There is also a `slackCardIntake` Worker webhook for a small Slack relay or Workflow payload. Direct Slack Events API setup still needs a tiny relay because Slack URL verification expects the raw `challenge` body, while Notion Worker webhooks return the standard Worker success response.
+
+Useful Slack prompts:
+
+```text
+@Vault Quartermaster scan this for Spencer
+@Vault Quartermaster add this card to Jarren's collection
+@Vault Quartermaster process this image for Waffle
+```
 
 ### Collection management
 Each scan creates or updates an Owned Card row tied to the scanning user, with quantity, condition, pre-grade estimate, and acquisition price. Multi-user workspace: each crew member has their own collection while sharing the same canonical Card Catalog. Agent tools `addOwnedCard`, `summarizeCollection`, and `listDuplicateCards` cover the loop.
@@ -188,6 +202,7 @@ The Worker provisions and populates a set of managed Notion databases that each 
 - Scan Inbox, Owned Cards, Wishlists, and Master Set databases.
 - Gallery, set-completion, owner, duplicate, wishlist, and portfolio-style views in Notion.
 - GIBL image-recognition integration for the scan path.
+- Slack image intake tool: download Slack image, add it to Scan Inbox, process it, and classify it into Owned Cards.
 - Scan Inbox upload path: upload a `Front image`, then run `processLatestScan` for a one-card demo or `processScanInboxQueue` for a batch to recognize/enrich the card and create an owned-card record. The true `processScanInboxUpload` Notion automation is coded but gated until the workspace has Worker automations enabled.
 - English-only recognition guardrails.
 - OPTCG API card, set, starter-deck, promo, DON!!, price, and image-fetch helpers.
@@ -273,6 +288,7 @@ The battle simulator is deployed as a separate Notion Worker using `workers.op-b
 - `processScanInboxPage`
 - `processScanInboxQueue`
 - `processLatestScan`
+- `processSlackCardImage`
 - `whatDidIJustScan`
 - `getCardDetails`
 - `getSetCards`
@@ -324,6 +340,8 @@ OPTCG_SET_IDS=OP-01,OP-02,OP-03,OP-04,OP-05,OP-06,OP-07,EB-01,OP-08,OP-09,OP-10,
 RECOGNITION_CONFIDENCE_THRESHOLD=0.82
 ENABLE_NOTION_AUTOMATIONS=0
 PRICECHARTING_API_TOKEN=
+SLACK_BOT_TOKEN=
+SLACK_OWNER_MAP=U_SLACK_SPENCER:Spencer,U_SLACK_JARREN:Jarren,U_SLACK_WAFFLE:Waffle
 BINDER_DENSITY=medium
 ```
 
@@ -376,4 +394,5 @@ CHANGELOG.md                  Release notes
 - Automated grading is a **pre-grade estimate**, not an official PSA grade.
 - English-only matching is deliberate for the P0 collection loop.
 - Generic catalog/price feeds remain available, but the live One Piece path uses OPTCG API plus GIBL.
+- Slack image intake requires a Slack bot token with file-read access if the image URL is Slack-private.
 - PriceCharting and Pokémon TCGdex providers are merged expansion rails, but the live Notion demo remains One Piece-first unless those providers are explicitly wired into Worker tools and Notion databases.
