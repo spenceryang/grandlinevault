@@ -10,17 +10,27 @@ export const setAnalyticsDatabaseConfig = {
 	schema: {
 		databaseIcon: emojiIcon("📊"),
 		properties: {
+			// Title + pk anchor the table.
 			"Set Name": Schema.title(),
 			"Set ID": Schema.richText(),
-			"Total Cards": Schema.number(),
-			Owned: Schema.number(),
+
+			// Headline metric — the bar/ring-renderable progress.
+			// Toggle "Show as bar" on this column in Notion.
 			"Completion %": Schema.number("percent"),
+
+			// Owned vs total — the literal "X of Y" sits next to the bar.
+			Owned: Schema.number(),
+			"Total Cards": Schema.number(),
+
+			// Dollar columns next — collectors care about value.
+			"Owned Value": Schema.number("dollar"),
+			"Total Value": Schema.number("dollar"),
+
+			// Base / parallel split is the secondary metric set.
 			"Base Owned": Schema.number(),
 			"Base Total": Schema.number(),
 			"Parallel Owned": Schema.number(),
 			"Parallel Total": Schema.number(),
-			"Total Value": Schema.number("dollar"),
-			"Owned Value": Schema.number("dollar"),
 		},
 	},
 };
@@ -35,11 +45,17 @@ export const rarityAnalyticsDatabaseConfig = {
 		databaseIcon: emojiIcon("✨"),
 		properties: {
 			Rarity: Schema.title(),
-			Count: Schema.number(),
-			Owned: Schema.number(),
+
+			// Bar-renderable progress sits right after the title.
 			"Completion %": Schema.number("percent"),
-			"Total Value": Schema.number("dollar"),
+
+			// Counts immediately after the bar.
+			Owned: Schema.number(),
+			Count: Schema.number(),
+
+			// Dollars last.
 			"Owned Value": Schema.number("dollar"),
+			"Total Value": Schema.number("dollar"),
 		},
 	},
 };
@@ -53,14 +69,26 @@ export const topCardsDatabaseConfig = {
 	schema: {
 		databaseIcon: emojiIcon("💎"),
 		properties: {
+			// Title + pk first.
 			Name: Schema.title(),
 			"Variant ID": Schema.richText(),
-			"Base Card ID": Schema.richText(),
-			"Set ID": Schema.richText(),
-			"Set Name": Schema.richText(),
-			Rarity: Schema.richText(),
+
+			// Market Price is the headline of this board — it's literally
+			// what the "top cards" are ranked by.
 			"Market Price": Schema.number("dollar"),
 			Owned: Schema.checkbox(),
+
+			// Image as `file` so the gallery view can use it as the card
+			// cover. Same pattern as the Master Set styling pass.
+			Image: Schema.file(),
+
+			// Card metadata.
+			Rarity: Schema.richText(),
+			"Set Name": Schema.richText(),
+
+			// Machine identifiers last.
+			"Base Card ID": Schema.richText(),
+			"Set ID": Schema.richText(),
 		},
 	},
 };
