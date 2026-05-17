@@ -23,13 +23,29 @@ export const tradeMatchesDatabaseConfig = {
 				{ name: "Unset", color: "default" },
 			]),
 			"Target Price": Schema.number("dollar"),
-			Status: Schema.select([
-				{ name: "Suggested", color: "blue" },
-				{ name: "Proposed", color: "yellow" },
-				{ name: "Accepted", color: "green" },
-				{ name: "Declined", color: "red" },
-				{ name: "Completed", color: "gray" },
-			]),
+			// Native Notion Status — dot icon + kanban-by-group view.
+			Status: Schema.status({
+				groups: [
+					{
+						name: "To-do",
+						options: [{ name: "Suggested", color: "blue" }],
+					},
+					{
+						name: "In progress",
+						options: [
+							{ name: "Proposed", color: "yellow" },
+							{ name: "Accepted", color: "green" },
+						],
+					},
+					{
+						name: "Complete",
+						options: [
+							{ name: "Declined", color: "red" },
+							{ name: "Completed", color: "gray" },
+						],
+					},
+				],
+			}),
 		},
 	},
 };

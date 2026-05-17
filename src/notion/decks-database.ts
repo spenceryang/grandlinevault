@@ -23,11 +23,24 @@ export const decksDatabaseConfig = {
 				{ name: "Casual", color: "gray" },
 				{ name: "Limited", color: "purple" },
 			]),
-			Status: Schema.select([
-				{ name: "Building", color: "yellow" },
-				{ name: "Active", color: "green" },
-				{ name: "Retired", color: "gray" },
-			]),
+			// Native Notion Status property — gets the dot icon, grouped
+			// colors, and kanban-by-group view support.
+			Status: Schema.status({
+				groups: [
+					{
+						name: "To-do",
+						options: [{ name: "Building", color: "yellow" }],
+					},
+					{
+						name: "In progress",
+						options: [{ name: "Active", color: "green" }],
+					},
+					{
+						name: "Complete",
+						options: [{ name: "Retired", color: "gray" }],
+					},
+				],
+			}),
 			"Card Count": Schema.number(),
 			"Estimated Value": Schema.number("dollar"),
 			Created: Schema.date(),

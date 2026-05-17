@@ -20,11 +20,22 @@ export const wishlistInsightsDatabaseConfig = {
 				{ name: "Low", color: "gray" },
 				{ name: "Unset", color: "default" },
 			]),
-			Status: Schema.select([
-				{ name: "Open", color: "blue" },
-				{ name: "Snoozed", color: "gray" },
-				{ name: "Acquired", color: "green" },
-			]),
+			// Native Notion Status — dot icon + kanban-by-group view.
+			Status: Schema.status({
+				groups: [
+					{
+						name: "To-do",
+						options: [
+							{ name: "Open", color: "blue" },
+							{ name: "Snoozed", color: "gray" },
+						],
+					},
+					{
+						name: "Complete",
+						options: [{ name: "Acquired", color: "green" }],
+					},
+				],
+			}),
 			"Target Price": Schema.number("dollar"),
 			"Current Market Price": Schema.number("dollar"),
 			"Dollars Below Target": Schema.number("dollar"),
