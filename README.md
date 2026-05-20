@@ -328,6 +328,28 @@ Archive older battle runs and keep the latest 5.
 
 The agent should always state that OP Battle Lab is official-rule-informed but simplified: it models leader, 50-card main deck, DON ramp, life pressure, cost curve, power, counter value, and card-type roles, while individual card text remains heuristic.
 
+## Vercel UI
+
+The repo now includes a Vercel-ready web UI in `public/` with serverless API routes in `api/`.
+
+It keeps Notion as the source of truth, but adds a polished card-wall interface, owner/game filters, and Pokemon support through TCGdex.
+
+Core routes:
+
+- `GET /api/collection` — reads the Notion `Owned Cards` data source.
+- `GET /api/pokemon-search?q=pikachu` — searches English Pokemon cards.
+- `POST /api/add-pokemon-card` — writes a selected Pokemon card into Notion.
+
+Required Vercel env vars:
+
+```bash
+NOTION_TOKEN=secret_xxx
+OWNED_CARDS_DATA_SOURCE_ID=c3d6f9ce-e062-47f3-81cc-d1f3c46fa3fc
+DEFAULT_OWNER=Spencer
+```
+
+See [`docs/VERCEL_UI.md`](docs/VERCEL_UI.md) for deployment and schema notes.
+
 ### Agent tools
 
 - `identifyCard`
@@ -410,12 +432,16 @@ src/
   config.ts                 Environment configuration
   index.ts                  Main Worker syncs and Agent tools
   op-battle.ts              Separate OP Battle Worker tools
+  vercel/                   Vercel UI API helpers for Notion, Pokemon, and collection rendering
   data/                     Offline seed data for demo resilience
   lib/                      Collection, grading, master-set, analytics, decklist, related-cards, luffy-index, battle logic
   notion/                   Notion database read/write helpers and schemas
   providers/                Recognition, generic feeds, OPTCG, TCGdex, and PriceCharting providers
+api/                        Vercel serverless API routes
+public/                     Vercel web UI assets
 docs/
   DEMO_SCRIPT_3_MIN.md          3-minute video script for hackathon demo
+  VERCEL_UI.md              Vercel UI deployment and schema notes
   NOTION_WORKSPACE_SETUP.md   Initial workspace provisioning
   OP_BATTLE_LAB.md            Battle simulator Worker, commands, and model limits
   GALLERY_VIEWS.md            Image-gallery view recipes

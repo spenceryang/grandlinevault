@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Grand Line Vault</title>
+		<meta name="description" content="A Notion-linked TCG collection OS for One Piece and Pokemon cards." />
+		<link rel="stylesheet" href="/styles.css" />
+	</head>
+	<body>
+		<main class="shell">
+			<section class="hero">
+				<div>
+					<p class="eyebrow">Grand Line Vault</p>
+					<h1>A visual TCG vault on top of your Notion database.</h1>
+					<p class="lede">Track One Piece and Pokémon cards, browse the collection like a real vault, and keep Notion as the source of truth.</p>
+				</div>
+				<div class="hero-card">
+					<span class="status-dot"></span>
+					<p>Live Notion sync</p>
+					<strong id="sync-status">Loading collection…</strong>
+				</div>
+			</section>
+
+			<section class="stats" id="stats"></section>
+
+			<section class="toolbar">
+				<label>
+					Search
+					<input id="search" type="search" placeholder="Zoro, Charizard, OP-01, swsh…" />
+				</label>
+				<label>
+					Game
+					<select id="game-filter">
+						<option value="">All games</option>
+						<option>One Piece</option>
+						<option>Pokemon</option>
+						<option>Unknown</option>
+					</select>
+				</label>
+				<label>
+					Owner
+					<select id="owner-filter"><option value="">All owners</option></select>
+				</label>
+			</section>
+
+			<section class="section-heading">
+				<div>
+					<p class="eyebrow">Collection</p>
+					<h2>Card wall</h2>
+				</div>
+				<button id="refresh" type="button">Refresh Notion</button>
+			</section>
+			<section class="grid" id="collection-grid" aria-live="polite"></section>
+
+			<section class="pokemon-panel">
+				<div>
+					<p class="eyebrow">Pokemon enabled</p>
+					<h2>Search TCGdex and add to Notion</h2>
+					<p>Search English Pokémon cards, preview details, then write the selected card into the same Owned Cards database.</p>
+				</div>
+				<form id="pokemon-form" class="pokemon-search">
+					<input id="pokemon-query" required placeholder="Search Pokémon, e.g. Pikachu" />
+					<button type="submit">Search</button>
+				</form>
+				<div class="pokemon-results" id="pokemon-results"></div>
+			</section>
+		</main>
+		<script src="/app.js" type="module"></script>
+	</body>
+</html>
