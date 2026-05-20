@@ -10,3 +10,5 @@ coverage
 /private
 .tmp
 tmp
+
+.vercel
