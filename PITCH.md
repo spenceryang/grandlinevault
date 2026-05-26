@@ -14,9 +14,21 @@ The card market is enormous: sealed product, singles, grading, marketplaces, con
 
 Grand Line Vault starts with the personal collector because that is where the daily pain is. The product should make someone proud to open their collection, proud to share it, and confident enough to ask, "what should I do next?" The market is big, but the wedge is intimate: **make one person's collection feel alive.**
 
-## Beyond the personal collector — shops, vendors, and high-volume sellers
+## Beyond the personal collector — shops, vendors, deckbuilders, and tournament hosts
 
-The same Notion-native model that helps an individual collector also gives **card shops, online vendors, and high-volume sellers** a workspace they did not have before:
+The same Notion-native model that helps an individual collector also serves several adjacent audiences. None of these needed a separate product to be built — they're the same workspace with different default views.
+
+### Standalone deckbuilders + collection organizers
+
+The shipped path doesn't force you to be a "completionist collector" to get value. Two practical standalone uses on day one:
+
+- **Decklist organizing** — the `Decks` + `Decklist Entries` databases (with the OPTCG validator) work even if your Owned Cards table is mostly empty. Drop in cards you're brewing, group by Slot or Color, render as a card-list table OR a Card Wall gallery — the same data two ways. Useful for "I have ten brews in progress, I want to compare them" without committing to scanning every binder.
+- **Deck generation from your collection** — once Owned Cards has even a partial collection, the OP Battle worker auto-builds permanent legal-ish Battle Decks per owner, sorted by your strongest available leader. That same primitive (build-a-deck-from-what-you-own) is a deck-suggestion engine for standalone deckbuilders, not just battle simulations.
+- **Collection organization without the rest of the pipeline** — Owned Cards + Master Set + Set Completion Dashboard are useful on their own. A user who just wants "my binder in Notion, with progress bars" stops at that layer and ignores Trade Matcher, Price Movers, etc. The product gracefully degrades to the subset you actually want.
+
+### Card shops + online vendors
+
+For **card shops, online vendors, and high-volume sellers**, the same workspace becomes an inventory + dashboard tool they didn't have before:
 
 - **Inventory tracking that doesn't fight you** — a card shop with thousands of singles can list each card as an Owned Card row, with quantity, condition, scan provenance, and live market price. The Card Wall + Master Set views double as a customer-facing visual catalog.
 - **Duplicate management at scale** — the Duplicate Cards dashboard already surfaces tradeable copies + a "Sell" status per row. For a vendor that pulls cases weekly, this becomes the shipping queue: filter `Status = Sell`, sort by tradeable value desc, print labels off the top of the list.
@@ -25,7 +37,16 @@ The same Notion-native model that helps an individual collector also gives **car
 - **Customer-facing share graphics** — Twitter / IG-story / OG share graphics that already exist for collectors become free marketing for shops. "Trade Night Drop" stories, "New restock" feed posts, "this case had a Charizard" pulls — all generated from the same Notion data.
 - **Inventory health insights** — Price Movers shows what's appreciating in your back stock; Set Completion shows which sets you're sealed-product-heavy on; Trade Matcher (cross-store between sister shops) is a small extension of the existing logic.
 
-The product is collector-first on the demo path, but the inventory + dashboards + sharing surface is **the same tool a small card vendor would buy on day one** — no separate "vendor mode" to build, just better defaults on views and a shop-tier seat in Notion.
+### In-house tournaments at card shops
+
+Shops that host **trade nights, league play, or in-house tournaments** can use the OP Battle worker as the bracket and result store without standing up tournament software:
+
+- **Permanent owner decks** — Battle Decks rows hold each entrant's submitted decklist (auto-built from their Owned Cards or hand-curated). The decks persist between events so the same player's "Tournament Deck" is just one row to update.
+- **Match results as Battle Run rows** — every recorded round writes a Battle Run page (player A vs player B, winner, turn count, deck snapshots). The Notion database becomes the tournament's match log without a separate scoring sheet.
+- **Standings via Notion roll-ups** — group Battle Runs by Winner, count, sort — instant standings table. Group by Player, sum wins/losses — round-robin scoreboard. No formulas the shop has to write.
+- **Replayable** — because each match writes a row with both deck snapshots, the shop owner can re-run popular matchups later as "simulated rematches" for content / a Discord write-up.
+
+The product is collector-first on the demo path, but the inventory + dashboards + deck + tournament surface is **the same tool a small card vendor or league host would buy on day one** — no separate "vendor mode" or "tournament mode" to build, just better defaults on views and a shop-tier seat in Notion.
 
 ## How we make it easy
 
