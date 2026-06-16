@@ -60,6 +60,20 @@ Agent behavior rules for the demo:
 - Include card name, set/card number, rarity or type, color, quantity, owner, market price, and a Notion link when available.
 - If scan automation is unavailable, use the manual fallback: upload image into the `Front image` property, leave status as `New`, then run `handleNewScan` for one row, or `handleAllNewScans` to drain the queue.
 
+## Intake methods
+
+Cards reach the collection through the Scan Inbox, but **how** they get there is intentionally pluggable. The Scan Inbox is the central queue; every intake method writes the same row shape (`Submitted By`, `Front image`, `Status = New`, `Source`).
+
+| Method | Status | How it works |
+|---|---|---|
+| **Notion upload** | Shipped | Drop a `Front image` directly into the Scan Inbox database. `processScanInboxQueue` picks it up on the next pass. Today's primary demo path. |
+| **Email (Resend Inbound)** | Provider scaffold merged | Collectors email card photos to a Resend Inbound address (e.g. `scans@grandlinevault.com`). Each delivered email becomes one Scan Inbox row per image attachment. Includes Svix-style HMAC signature verification, 5-min replay protection, image-only filter. See [`docs/RESEND_INBOUND_SCANS.md`](./docs/RESEND_INBOUND_SCANS.md). |
+| **Discord bot** | Draft PR | A standalone Discord bot watches a configured channel for image uploads and writes one Scan Inbox row per attachment, tied to the Discord user identity. Lives in [`discord/`](./discord/) as its own Node.js subproject. See [`discord/discord_setup.md`](./discord/discord_setup.md). |
+| **Slack** | Ready | Slack Events API webhook receiver that picks up `message` events with `file_shared` subtype, verifies the request signature, and writes one Scan Inbox row per image attachment. Same Scan Inbox writer as the other intakes — Slack is just an alternate trigger. |
+| **iMessage** | Planned | Two practical paths: (a) an Apple Shortcut on the collector's phone that emails the image through the Resend Inbound path, or (b) a small native helper that watches the macOS Messages SQLite store and forwards new image attachments. (a) is the cheap path and reuses the email intake; (b) is local-only but more native-feeling. |
+
+Adding a new intake method is a focused contract — accept an image (URL or bytes) + a "Submitted By" identifier, write a Scan Inbox row. The recognition + enrichment + Owned Card creation pipeline is unchanged.
+
 ## Features
 
 ### Scan and recognize
