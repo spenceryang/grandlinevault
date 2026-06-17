@@ -1,0 +1,24 @@
+{
+	"name": "@grandlinevault/discord-bot",
+	"version": "0.0.1",
+	"private": true,
+	"type": "module",
+	"description": "Discord bot that converts uploaded card images into Grand Line Vault Scan Inbox rows.",
+	"scripts": {
+		"start": "tsx src/bot.ts",
+		"build": "tsc -p tsconfig.json",
+		"typecheck": "tsc -p tsconfig.json --noEmit"
+	},
+	"engines": {
+		"node": ">=22.0.0"
+	},
+	"dependencies": {
+		"@notionhq/client": "^2.2.15",
+		"discord.js": "^14.16.0"
+	},
+	"devDependencies": {
+		"@types/node": "^22.9.0",
+		"tsx": "^4.20.6",
+		"typescript": "^5.8.0"
+	}
+}
